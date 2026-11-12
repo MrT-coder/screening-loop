@@ -18,8 +18,8 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.AuditEvent;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
-import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Provenance;
 import org.hl7.fhir.r4.model.Task;
@@ -36,7 +36,7 @@ class CaseServiceIntegrationTest {
     private IGenericClient client;
     private CaseService service;
     private String patient;
-    private String report;
+    private String fitResult;
     private String agent;
     private Set<String> auditIdsBefore;
 
@@ -46,14 +46,20 @@ class CaseServiceIntegrationTest {
         boolean isServerUp = isReachable();
         assumeTrue(isServerUp, "HAPI server is not running");
         service = new CaseService(client, Clock.systemUTC());
-        Bundle reports = firstOf(DiagnosticReport.class);
+        Bundle fitResults = findFitResult();
         Bundle practitioners = firstOf(Practitioner.class);
-        assumeTrue(reports.hasEntry() && practitioners.hasEntry(), "Seed data is missing");
-        DiagnosticReport source = (DiagnosticReport) reports.getEntryFirstRep().getResource();
-        report = source.getIdElement().toUnqualifiedVersionless().getValue();
+        assumeTrue(fitResults.hasEntry() && practitioners.hasEntry(), "Seed data is missing");
+        Observation source = (Observation) fitResults.getEntryFirstRep().getResource();
+        fitResult = source.getIdElement().toUnqualifiedVersionless().getValue();
         patient = source.getSubject().getReference();
         agent = practitioners.getEntryFirstRep().getResource().getIdElement().toUnqualifiedVersionless().getValue();
         auditIdsBefore = auditIds();
+    }
+
+    private Bundle findFitResult() {
+        return client.search().forResource(Observation.class)
+                .where(Observation.CODE.exactly().systemAndCode("http://loinc.org", "57905-2"))
+                .count(1).returnBundle(Bundle.class).execute();
     }
 
     private Bundle firstOf(Class<? extends IBaseResource> type) {
@@ -83,7 +89,7 @@ class CaseServiceIntegrationTest {
 
     @Test
     void opensAdvancesAndLeavesProvenanceAndAudit() {
-        Task opened = service.openCase(patient, report, agent, DUE_DATE);
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
         created.add(opened.getIdElement().toUnqualifiedVersionless());
         TransitionRequest request = TransitionRequest.advance(CaseStage.PATIENT_NOTIFIED, agent, DUE_DATE);
         Task advanced = service.advance(opened.getIdElement().getIdPart(), request, agent);
@@ -98,7 +104,7 @@ class CaseServiceIntegrationTest {
 
     @Test
     void rejectsAStaleTransitionWithoutWritingAnything() {
-        Task opened = service.openCase(patient, report, agent, DUE_DATE);
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
         created.add(opened.getIdElement().toUnqualifiedVersionless());
         TransitionRequest skip = TransitionRequest.advance(CaseStage.APPOINTMENT_BOOKED, agent, DUE_DATE);
         assertThatThrownBy(() -> service.advance(opened.getIdElement().getIdPart(), skip, agent))

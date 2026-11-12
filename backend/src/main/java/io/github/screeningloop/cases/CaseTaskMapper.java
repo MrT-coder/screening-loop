@@ -22,7 +22,7 @@ public class CaseTaskMapper {
         this.policy = policy;
     }
 
-    public Task openCase(String patient, String report, String owner, LocalDate dueDate, Instant now) {
+    public Task openCase(String patient, String fitResult, String owner, LocalDate dueDate, Instant now) {
         policy.validateOpening(owner, dueDate);
         Task task = new Task();
         task.setStatus(Task.TaskStatus.INPROGRESS);
@@ -31,7 +31,7 @@ public class CaseTaskMapper {
         task.setCode(new CodeableConcept(
                 new Coding(CaseCodes.TASK_TYPE_SYSTEM, CaseCodes.SCREENING_CASE, "Screening case")));
         task.setFor(new Reference(patient));
-        task.setFocus(new Reference(report));
+        task.setFocus(new Reference(fitResult));
         task.setAuthoredOn(Date.from(now));
         applyStage(task, CaseStage.RESULT_ISSUED, owner, dueDate, now);
         return task;

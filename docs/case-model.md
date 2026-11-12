@@ -11,7 +11,8 @@ Every handoff has an owner and a due date. Closure needs evidence or a recorded 
 ## Structure
 
 - **Parent Task = the case.** `code` = `screening-case` (own CodeSystem), `intent` = `order`,
-  `for` = Patient, `focus` = the triggering `DiagnosticReport` (FIT result),
+  `for` = Patient, `focus` = the triggering FIT `Observation`
+  (Synthea records the FIT as an `Observation` with no `DiagnosticReport`),
   `businessStatus` = current lifecycle stage (own CodeSystem), `priority` = `routine` or `urgent`.
   Single-system simplification of the spec's referral pattern (which uses a sub-Task on the placer's system).
 - **Child Tasks (`partOf` = parent), one per handoff.** Each has its own `status`, `owner`,
@@ -40,7 +41,7 @@ Side states: `referral-rejected` (child `referral` is `rejected`, parent returns
 
 | Stage | FHIR resources |
 |-------|----------------|
-| Result issued | `Observation` (FIT, LOINC 57905-2) + `DiagnosticReport` |
+| Result issued | `Observation` (FIT, LOINC 57905-2), the `focus` of the case |
 | Notified / acknowledged | `Communication` (`sent`, `received`; reply via `inResponseTo`). Acknowledgement is our modelling: `Communication` has no read-receipt element |
 | Confirmation | `ServiceRequest` + child `Task` (`focus` = the ServiceRequest) |
 | Referral | `ServiceRequest` + child `Task` with native `requested`, `accepted`, `rejected` |

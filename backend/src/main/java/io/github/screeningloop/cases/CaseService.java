@@ -26,8 +26,8 @@ public class CaseService {
         this.clock = clock;
     }
 
-    public Task openCase(String patient, String report, String owner, LocalDate dueDate) {
-        Task task = mapper.openCase(patient, report, owner, dueDate, clock.instant());
+    public Task openCase(String patient, String fitResult, String owner, LocalDate dueDate) {
+        Task task = mapper.openCase(patient, fitResult, owner, dueDate, clock.instant());
         String id = client.create().resource(task).execute().getId().getIdPart();
         return readTask(id);
     }

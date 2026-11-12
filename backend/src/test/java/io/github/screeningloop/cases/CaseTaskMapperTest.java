@@ -17,7 +17,7 @@ class CaseTaskMapperTest {
     private static final Instant NOW = Instant.parse("2026-11-12T10:00:00Z");
     private static final LocalDate DUE_DATE = LocalDate.of(2026, 12, 1);
     private static final String PATIENT = "Patient/p1";
-    private static final String REPORT = "DiagnosticReport/fit-1";
+    private static final String FIT_RESULT = "Observation/fit-1";
     private static final String OWNER = "Practitioner/gp-1";
     private static final String NEW_OWNER = "Practitioner/nurse-2";
     private static final String AGENT = "Practitioner/gp-1";
@@ -28,12 +28,12 @@ class CaseTaskMapperTest {
 
     @Test
     void opensACaseAtResultIssuedWithOwnerAndDueDate() {
-        Task task = mapper.openCase(PATIENT, REPORT, OWNER, DUE_DATE, NOW);
+        Task task = mapper.openCase(PATIENT, FIT_RESULT, OWNER, DUE_DATE, NOW);
         assertThat(task.getStatus()).isEqualTo(Task.TaskStatus.INPROGRESS);
         assertThat(task.getIntent()).isEqualTo(Task.TaskIntent.ORDER);
         assertThat(task.getCode().getCodingFirstRep().getCode()).isEqualTo("screening-case");
         assertThat(task.getFor().getReference()).isEqualTo(PATIENT);
-        assertThat(task.getFocus().getReference()).isEqualTo(REPORT);
+        assertThat(task.getFocus().getReference()).isEqualTo(FIT_RESULT);
         assertThat(stageCode(task)).isEqualTo("result-issued");
         assertThat(task.getOwner().getReference()).isEqualTo(OWNER);
         assertThat(task.getRestriction().getPeriod().getEndElement().getValueAsString()).isEqualTo("2026-12-01");
@@ -41,7 +41,7 @@ class CaseTaskMapperTest {
 
     @Test
     void refusesToOpenACaseWithoutOwner() {
-        assertThatThrownBy(() -> mapper.openCase(PATIENT, REPORT, "", DUE_DATE, NOW))
+        assertThatThrownBy(() -> mapper.openCase(PATIENT, FIT_RESULT, "", DUE_DATE, NOW))
                 .isInstanceOf(InvalidTransitionException.class);
     }
 
@@ -117,7 +117,7 @@ class CaseTaskMapperTest {
     }
 
     private Task storedTask(CaseStage stage) {
-        Task task = mapper.openCase(PATIENT, REPORT, OWNER, DUE_DATE, NOW);
+        Task task = mapper.openCase(PATIENT, FIT_RESULT, OWNER, DUE_DATE, NOW);
         task.getBusinessStatus().getCodingFirstRep().setCode(stage.code());
         task.setId("Task/t1");
         task.getMeta().setVersionId(CURRENT_VERSION);
