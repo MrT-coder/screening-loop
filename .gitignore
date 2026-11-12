@@ -1,0 +1,34 @@
+# Challenge/organizer material (private working notes, not for the public repo)
+CONTEXT.md
+challenges-*.md
+*.pptx
+*.potx
+submission/
+
+# Tooling
+.playwright-cli/
+.claude/
+.codegraph/
+.atl/
+
+# Secrets and environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+cloudflared/*.json
+
+# Build output and dependencies
+target/
+build/
+node_modules/
+dist/
+*.log
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
