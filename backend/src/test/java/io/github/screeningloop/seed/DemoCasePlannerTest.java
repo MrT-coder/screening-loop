@@ -84,6 +84,14 @@ class DemoCasePlannerTest {
                         .isIn(OWNERS));
     }
 
+    @Test
+    void givesEveryClosureWithoutCareARecordedReason() {
+        List<DemoCasePlan> plans = planner.plan(inputs(POSITIVE_PATIENTS, EVIDENCE), TODAY);
+        assertThat(plans).filteredOn(plan -> finalStage(plan) == CaseStage.CLOSED_WITHOUT_CARE)
+                .isNotEmpty()
+                .allSatisfy(plan -> assertThat(plan.steps().get(plan.steps().size() - 1).reason()).isNotNull());
+    }
+
     private LocalDate finalDueDate(DemoCasePlan plan) {
         List<TransitionRequest> steps = plan.steps();
         return steps.isEmpty() ? plan.dueDate() : steps.get(steps.size() - 1).dueDate();

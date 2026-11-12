@@ -80,12 +80,29 @@ class CaseTransitionPolicyTest {
 
     @Test
     void closesWithoutCareOnlyWithAHumanDecision() {
-        TransitionRequest withDecision = TransitionRequest.closeWithoutCare(OWNER, HUMAN_DECISION_BY);
-        TransitionRequest withoutDecision = TransitionRequest.closeWithoutCare(OWNER, "");
+        TransitionRequest withDecision = TransitionRequest.closeWithoutCare(
+                OWNER, HUMAN_DECISION_BY, ClosureReason.PATIENT_DECLINED);
+        TransitionRequest withoutDecision = TransitionRequest.closeWithoutCare(
+                OWNER, "", ClosureReason.PATIENT_DECLINED);
         assertThatCode(() -> policy.validate(CaseStage.PATIENT_NOTIFIED, withDecision)).doesNotThrowAnyException();
         assertThatThrownBy(() -> policy.validate(CaseStage.PATIENT_NOTIFIED, withoutDecision))
                 .isInstanceOf(InvalidTransitionException.class)
                 .hasMessageContaining("human decision");
+    }
+
+    @Test
+    void closesWithoutCareOnlyWithAReason() {
+        TransitionRequest withoutReason = TransitionRequest.closeWithoutCare(OWNER, HUMAN_DECISION_BY, null);
+        assertThatThrownBy(() -> policy.validate(CaseStage.PATIENT_NOTIFIED, withoutReason))
+                .isInstanceOf(InvalidTransitionException.class)
+                .hasMessageContaining("reason");
+    }
+
+    @Test
+    void rejectsAnUnknownClosureReasonCode() {
+        assertThatThrownBy(() -> ClosureReason.fromCode("teleported"))
+                .isInstanceOf(InvalidTransitionException.class);
+        assertThat(ClosureReason.fromCode("patient-declined")).isEqualTo(ClosureReason.PATIENT_DECLINED);
     }
 
     @Test

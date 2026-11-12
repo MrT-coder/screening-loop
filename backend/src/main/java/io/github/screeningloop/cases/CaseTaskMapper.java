@@ -73,7 +73,9 @@ public class CaseTaskMapper {
             request.evidence().forEach(evidence -> addEvidence(task, evidence));
         } else if (request.target() == CaseStage.CLOSED_WITHOUT_CARE) {
             task.setStatus(Task.TaskStatus.CANCELLED);
-            task.setStatusReason(new CodeableConcept().setText(CLOSED_WITHOUT_CARE_REASON));
+            CodeableConcept reason = new CodeableConcept(
+                    new Coding(CaseCodes.CLOSURE_REASON_SYSTEM, request.reason().code(), null));
+            task.setStatusReason(reason.setText(CLOSED_WITHOUT_CARE_REASON));
         }
     }
 

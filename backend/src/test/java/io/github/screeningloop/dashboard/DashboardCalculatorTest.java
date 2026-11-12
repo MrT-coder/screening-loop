@@ -1,15 +1,20 @@
 package io.github.screeningloop.dashboard;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.github.screeningloop.api.CaseView;
+import io.github.screeningloop.cases.CaseCodes;
 import io.github.screeningloop.cases.CaseStage;
 import io.github.screeningloop.cases.CaseTaskMapper;
 import io.github.screeningloop.cases.CaseTransitionPolicy;
+import io.github.screeningloop.cases.ClosureReason;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Task;
 import org.junit.jupiter.api.Test;
@@ -23,6 +28,7 @@ class DashboardCalculatorTest {
     private static final Instant CLOSED_AT = Instant.parse("2026-11-11T00:00:00Z");
     private static final double TEN_DAYS = 10.0;
     private static final int TOTAL_CASES = 4;
+    private static final double HALF = 0.5;
     private static final String OWNER = "Practitioner/gp-1";
 
     private final CaseTaskMapper mapper = new CaseTaskMapper(new CaseTransitionPolicy());
@@ -73,6 +79,36 @@ class DashboardCalculatorTest {
     }
 
     @Test
+    void countsDropOffReasonsOfCasesClosedWithoutCare() {
+        List<Task> tasks = List.of(
+                closedWithReason("1", ClosureReason.PATIENT_DECLINED),
+                closedWithReason("2", ClosureReason.PATIENT_DECLINED),
+                closedWithReason("3", ClosureReason.UNREACHABLE),
+                closed("4", CaseStage.CLOSED_WITHOUT_CARE),
+                closed("5", CaseStage.CLOSED));
+        DashboardSummary summary = calculator.summarize(tasks, TODAY);
+        assertThat(summary.dropOffReasons()).containsOnly(
+                entry("patient-declined", 2), entry("unreachable", 1), entry("unspecified", 1));
+    }
+
+    @Test
+    void measuresHowManyReferralsWereAcceptedAmongTheReferredCases() {
+        List<Task> tasks = List.of(
+                task("1", CaseStage.REFERRAL_REQUESTED, FUTURE),
+                task("2", CaseStage.REFERRAL_REJECTED, FUTURE),
+                task("3", CaseStage.REFERRAL_ACCEPTED, FUTURE),
+                task("4", CaseStage.APPOINTMENT_BOOKED, FUTURE),
+                task("5", CaseStage.PATIENT_NOTIFIED, FUTURE));
+        assertThat(calculator.summarize(tasks, TODAY).referralAcceptanceRate()).isEqualTo(HALF);
+    }
+
+    @Test
+    void hasNoReferralAcceptanceRateWhenNothingWasReferred() {
+        DashboardSummary summary = calculator.summarize(List.of(task("1", CaseStage.ACKNOWLEDGED, FUTURE)), TODAY);
+        assertThat(summary.referralAcceptanceRate()).isNull();
+    }
+
+    @Test
     void averagesTheDaysItTookToCloseCases() {
         DashboardSummary summary = calculator.summarize(List.of(closed("1", CaseStage.CLOSED)), TODAY);
         assertThat(summary.averageDaysToClose()).isEqualTo(TEN_DAYS);
@@ -89,6 +125,12 @@ class DashboardCalculatorTest {
         task.setId("Task/" + id);
         task.getMeta().setVersionId("1");
         task.getBusinessStatus().getCodingFirstRep().setCode(stage.code());
+        return task;
+    }
+
+    private Task closedWithReason(String id, ClosureReason reason) {
+        Task task = closed(id, CaseStage.CLOSED_WITHOUT_CARE);
+        task.setStatusReason(new CodeableConcept(new Coding(CaseCodes.CLOSURE_REASON_SYSTEM, reason.code(), null)));
         return task;
     }
 

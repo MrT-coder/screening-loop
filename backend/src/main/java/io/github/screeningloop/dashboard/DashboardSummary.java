@@ -13,5 +13,7 @@ public record DashboardSummary(
         List<CaseView> overdue,
         List<CaseView> unassigned,
         List<CaseView> rejected,
-        Double averageDaysToClose) {
+        Double averageDaysToClose,
+        Map<String, Integer> dropOffReasons,
+        Double referralAcceptanceRate) {
 }

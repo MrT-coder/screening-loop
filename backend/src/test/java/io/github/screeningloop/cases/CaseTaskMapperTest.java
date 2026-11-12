@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Provenance;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Task;
@@ -98,12 +99,15 @@ class CaseTaskMapperTest {
     @Test
     void closingWithoutCareCancelsTheTaskAndRecordsTheHumanAgent() {
         Task current = storedTask();
-        TransitionRequest request = TransitionRequest.closeWithoutCare(OWNER, "Practitioner/supervisor-1");
+        TransitionRequest request = TransitionRequest.closeWithoutCare(
+                OWNER, "Practitioner/supervisor-1", ClosureReason.UNREACHABLE);
         Bundle bundle = mapper.advance(current, request, AGENT, NOW);
         Task updated = (Task) bundle.getEntry().get(0).getResource();
         Provenance provenance = (Provenance) bundle.getEntry().get(1).getResource();
         assertThat(updated.getStatus()).isEqualTo(Task.TaskStatus.CANCELLED);
-        assertThat(updated.hasStatusReason()).isTrue();
+        Coding reason = updated.getStatusReason().getCodingFirstRep();
+        assertThat(reason.getSystem()).isEqualTo(CaseCodes.CLOSURE_REASON_SYSTEM);
+        assertThat(reason.getCode()).isEqualTo("unreachable");
         assertThat(provenance.getAgent()).extracting(agent -> agent.getWho().getReference())
                 .contains("Practitioner/supervisor-1");
     }

@@ -30,7 +30,7 @@ class DashboardControllerTest {
     @Test
     void returnsTheSummaryForTheActor() throws Exception {
         DashboardSummary summary = new DashboardSummary(
-                TOTAL, 2, 1, 0, Map.of("result-issued", 2), List.of(), List.of(), List.of(), null);
+                TOTAL, 2, 1, 0, Map.of("result-issued", 2), List.of(), List.of(), List.of(), null, Map.of(), null);
         when(service.summarize(ACTOR)).thenReturn(summary);
         mvc.perform(get("/api/dashboard").header("X-Actor", ACTOR))
                 .andExpect(status().isOk())

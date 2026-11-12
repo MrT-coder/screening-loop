@@ -59,6 +59,9 @@ public class CaseTransitionPolicy {
         }
         if (request.target() == CaseStage.CLOSED_WITHOUT_CARE) {
             requireText(request.humanDecisionBy(), "Closing without care requires a recorded human decision");
+            if (request.reason() == null) {
+                throw new InvalidTransitionException("Closing without care requires a closure reason");
+            }
         }
     }
 

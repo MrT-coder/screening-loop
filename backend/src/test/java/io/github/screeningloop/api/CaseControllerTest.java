@@ -99,6 +99,17 @@ class CaseControllerTest {
     }
 
     @Test
+    void answersUnprocessableForAnUnknownClosureReason() throws Exception {
+        String body = """
+                {"target":"closed-without-care","owner":"Practitioner/gp-1","humanDecisionBy":"Practitioner/gp-2",
+                "reason":"teleported"}
+                """;
+        mvc.perform(post("/api/cases/t1/transitions").header("X-Actor", ACTOR)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void answersConflictWhenSomeoneElseChangedTheCase() throws Exception {
         when(service.advance(eq("t1"), any(TransitionRequest.class), eq(ACTOR)))
                 .thenThrow(new ResourceVersionConflictException("stale"));

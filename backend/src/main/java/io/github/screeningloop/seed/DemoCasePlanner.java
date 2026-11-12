@@ -1,6 +1,7 @@
 package io.github.screeningloop.seed;
 
 import io.github.screeningloop.cases.CaseStage;
+import io.github.screeningloop.cases.ClosureReason;
 import io.github.screeningloop.cases.TransitionRequest;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class DemoCasePlanner {
         for (int position = 1; position < path.size(); position++) {
             boolean isLast = position == path.size() - 1;
             LocalDate due = isLast ? finalDue : today.minusDays(PAST_STEP_DAYS - position);
-            steps.add(stepTo(path.get(position), ownerAt(index, position), due, input));
+            steps.add(stepTo(path.get(position), ownerAt(index, position), due, input, index));
         }
         LocalDate openingDue = steps.isEmpty() ? finalDue : today.minusDays(PAST_STEP_DAYS);
         return new DemoCasePlan(input.patient(), input.fitResult(), ownerAt(index, 0), openingDue, steps);
@@ -85,10 +86,12 @@ public class DemoCasePlanner {
         return extended;
     }
 
-    private TransitionRequest stepTo(CaseStage target, String owner, LocalDate due, DemoCaseInput input) {
+    private TransitionRequest stepTo(
+            CaseStage target, String owner, LocalDate due, DemoCaseInput input, int index) {
         return switch (target) {
             case CLOSED -> TransitionRequest.close(owner, List.of(input.evidence()));
-            case CLOSED_WITHOUT_CARE -> TransitionRequest.closeWithoutCare(owner, owners.get(0));
+            case CLOSED_WITHOUT_CARE -> TransitionRequest.closeWithoutCare(
+                    owner, owners.get(0), ClosureReason.values()[index % ClosureReason.values().length]);
             default -> TransitionRequest.advance(target, owner, due);
         };
     }
