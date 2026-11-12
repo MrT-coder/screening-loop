@@ -3,6 +3,7 @@ package io.github.screeningloop.api;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceVersionConflictException;
+import io.github.screeningloop.access.ForbiddenActionException;
 import io.github.screeningloop.cases.InvalidTransitionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -15,6 +16,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidTransitionException.class)
     public ProblemDetail handleInvalidTransition(InvalidTransitionException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenActionException.class)
+    public ProblemDetail handleForbidden(ForbiddenActionException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
     }
 
     @ExceptionHandler(ResourceVersionConflictException.class)

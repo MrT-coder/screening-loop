@@ -2,12 +2,15 @@ package io.github.screeningloop.seed;
 
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import io.github.screeningloop.access.Actor;
+import io.github.screeningloop.access.Role;
 import io.github.screeningloop.cases.CaseCodes;
 import io.github.screeningloop.cases.CaseService;
 import io.github.screeningloop.cases.TransitionRequest;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Practitioner;
@@ -28,7 +31,17 @@ public class DemoCaseRunner implements ApplicationRunner {
     private static final String FIT_CODE = "57905-2";
     private static final String POSITIVE = "POS";
     private static final int PAGE_SIZE = 200;
-    private static final int OWNER_COUNT = 4;
+    private static final Map<String, String> DEMO_PRACTITIONERS = Map.of(
+            "demo-coordinator", "Coordinator",
+            "demo-gp-1", "GeneralPractitionerOne",
+            "demo-gp-2", "GeneralPractitionerTwo",
+            "demo-specialist-1", "Specialist",
+            "demo-guest", "Guest");
+    private static final List<String> CASE_OWNERS = List.of(
+            "Practitioner/demo-gp-1",
+            "Practitioner/demo-gp-2",
+            "Practitioner/demo-specialist-1",
+            "Practitioner/demo-coordinator");
 
     private final IGenericClient client;
     private final CaseService caseService;
@@ -46,16 +59,18 @@ public class DemoCaseRunner implements ApplicationRunner {
             LOGGER.info("Demo cases skipped: screening cases already exist");
             return;
         }
-        List<DemoCasePlan> plans = new DemoCasePlanner(findOwners()).plan(findInputs(), LocalDate.now(clock));
+        ensurePractitioners();
+        List<DemoCasePlan> plans = new DemoCasePlanner(CASE_OWNERS).plan(findInputs(), LocalDate.now(clock));
         plans.forEach(this::execute);
         LOGGER.info("Demo cases created: {}", plans.size());
     }
 
     private void execute(DemoCasePlan plan) {
-        Task task = caseService.openCase(plan.patient(), plan.fitResult(), plan.owner(), plan.dueDate());
+        Actor system = new Actor(plan.owner(), Role.COORDINATOR);
+        Task task = caseService.openCase(plan.patient(), plan.fitResult(), plan.owner(), plan.dueDate(), system);
         String id = task.getIdElement().getIdPart();
         for (TransitionRequest step : plan.steps()) {
-            caseService.advance(id, step, step.owner());
+            caseService.advance(id, step, new Actor(step.owner(), Role.COORDINATOR));
         }
     }
 
@@ -70,16 +85,12 @@ public class DemoCaseRunner implements ApplicationRunner {
         return !bundle.getEntry().isEmpty();
     }
 
-    private List<String> findOwners() {
-        Bundle bundle = client.search()
-                .forResource(Practitioner.class)
-                .count(OWNER_COUNT)
-                .cacheControl(new CacheControlDirective().setNoCache(true))
-                .returnBundle(Bundle.class)
-                .execute();
-        return bundle.getEntry().stream()
-                .map(entry -> "Practitioner/" + entry.getResource().getIdElement().getIdPart())
-                .toList();
+    private void ensurePractitioners() {
+        DEMO_PRACTITIONERS.forEach((id, family) -> {
+            Practitioner practitioner = new Practitioner();
+            practitioner.addName().setFamily(family).addGiven("Demo");
+            client.update().resource(practitioner).withId(id).execute();
+        });
     }
 
     private List<DemoCaseInput> findInputs() {

@@ -15,11 +15,20 @@
         <p class="subtitle">Colorectal screening: positive FIT to documented closure</p>
       </div>
     </div>
-    <form id="actor-form" class="actor">
-      <label for="actor">Acting as</label>
-      <input id="actor" name="actor" type="text" autocomplete="off" spellcheck="false">
-      <button type="submit">Load</button>
-    </form>
+    <div class="session">
+      <form id="login-form" class="actor" hidden>
+        <label for="username">User</label>
+        <input id="username" name="username" type="text" autocomplete="username" spellcheck="false" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button type="submit">Sign in</button>
+        <button type="button" id="guest-button" class="secondary">Continue as guest</button>
+      </form>
+      <div id="user-info" class="actor" hidden>
+        <span id="user-label"></span>
+        <button type="button" id="logout-button" class="secondary">Sign out</button>
+      </div>
+    </div>
   </header>
 
   <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool and not validated for care.</p>

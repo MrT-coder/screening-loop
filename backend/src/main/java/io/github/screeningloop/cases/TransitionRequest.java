@@ -11,6 +11,10 @@ public record TransitionRequest(
         String humanDecisionBy,
         ClosureReason reason) {
 
+    public TransitionRequest withHumanDecisionBy(String decider) {
+        return new TransitionRequest(target, owner, dueDate, evidence, decider, reason);
+    }
+
     public static TransitionRequest advance(CaseStage target, String owner, LocalDate dueDate) {
         return new TransitionRequest(target, owner, dueDate, List.of(), null, null);
     }

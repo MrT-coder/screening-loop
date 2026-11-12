@@ -152,6 +152,12 @@ button {
   cursor: pointer;
 }
 
+button.secondary {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
 .notice {
   margin-top: 12px;
   margin-bottom: 20px;

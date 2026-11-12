@@ -2,6 +2,8 @@ package io.github.screeningloop.cases;
 
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import io.github.screeningloop.access.AccessPolicy;
+import io.github.screeningloop.access.Actor;
 import io.github.screeningloop.audit.AuditEventFactory;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -22,21 +24,27 @@ public class CaseService {
     private final Clock clock;
     private final CaseTaskMapper mapper = new CaseTaskMapper(new CaseTransitionPolicy());
     private final AuditEventFactory auditEvents = new AuditEventFactory();
+    private final AccessPolicy accessPolicy = new AccessPolicy();
 
     public CaseService(IGenericClient client, Clock clock) {
         this.client = client;
         this.clock = clock;
     }
 
-    public Task openCase(String patient, String fitResult, String owner, LocalDate dueDate) {
+    public Task openCase(String patient, String fitResult, String owner, LocalDate dueDate, Actor actor) {
+        accessPolicy.requireCanOpen(actor);
         Task task = mapper.openCase(patient, fitResult, owner, dueDate, clock.instant());
         String id = client.create().resource(task).execute().getId().getIdPart();
         return readTask(id);
     }
 
-    public Task advance(String taskId, TransitionRequest request, String agent) {
+    public Task advance(String taskId, TransitionRequest request, Actor actor) {
         Task current = readTask(taskId);
-        Bundle transaction = mapper.advance(current, request, agent, clock.instant());
+        accessPolicy.requireCanAdvance(actor, current.getOwner().getReference(), request.target());
+        TransitionRequest decided = request.target() == CaseStage.CLOSED_WITHOUT_CARE
+                ? request.withHumanDecisionBy(actor.practitioner())
+                : request;
+        Bundle transaction = mapper.advance(current, decided, actor.practitioner(), clock.instant());
         client.transaction().withBundle(transaction).execute();
         return readTask(taskId);
     }

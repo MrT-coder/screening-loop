@@ -4,9 +4,33 @@ spring:
 
 server:
   port: 8082
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
 
 management:
   endpoints:
     web:
       exposure:
         include: health
+
+screening:
+  users:
+    - username: coordinator
+      password: coordinator-demo
+      practitioner: Practitioner/demo-coordinator
+      role: COORDINATOR
+    - username: gp1
+      password: gp1-demo
+      practitioner: Practitioner/demo-gp-1
+      role: CLINICIAN
+    - username: gp2
+      password: gp2-demo
+      practitioner: Practitioner/demo-gp-2
+      role: CLINICIAN
+    - username: guest
+      password: guest-demo
+      practitioner: Practitioner/demo-guest
+      role: GUEST

@@ -1,5 +1,4 @@
-const ACTOR_KEY = 'screening-loop.actor';
-const DEFAULT_ACTOR = 'Practitioner/1903';
+const GUEST_CREDENTIALS = { username: 'guest', password: 'guest-demo' };
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const CLOSED_STAGES = ['closed', 'closed-without-care'];
 
@@ -17,25 +16,15 @@ const STAGE_LABELS = {
   'closed-without-care': 'Closed without care',
 };
 
-const form = document.getElementById('actor-form');
-const actorInput = document.getElementById('actor');
+const loginForm = document.getElementById('login-form');
+const userInfo = document.getElementById('user-info');
+const userLabel = document.getElementById('user-label');
 const message = document.getElementById('message');
 const content = document.getElementById('content');
 
-function readStoredActor() {
-  try {
-    return localStorage.getItem(ACTOR_KEY) || DEFAULT_ACTOR;
-  } catch (error) {
-    return DEFAULT_ACTOR;
-  }
-}
-
-function storeActor(actor) {
-  try {
-    localStorage.setItem(ACTOR_KEY, actor);
-  } catch (error) {
-    return;
-  }
+function csrfToken() {
+  const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='));
+  return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
 }
 
 function element(tag, className, text) {
@@ -204,14 +193,28 @@ function showMessage(text) {
   content.hidden = true;
 }
 
-async function load(actor) {
+function showSignedOut(text) {
+  loginForm.hidden = false;
+  userInfo.hidden = true;
+  showMessage(text);
+}
+
+function showSignedIn(me) {
+  loginForm.hidden = true;
+  userInfo.hidden = false;
+  userLabel.textContent = `Signed in as ${me.username} (${me.role.toLowerCase()})`;
+}
+
+async function load() {
   message.hidden = true;
   try {
-    const response = await fetch('/api/dashboard', { headers: { 'X-Actor': actor } });
+    const response = await fetch('/api/dashboard');
+    if (response.status === 401) {
+      showSignedOut('Sign in to see the dashboard, or continue as guest for a read-only view.');
+      return;
+    }
     if (!response.ok) {
-      showMessage(response.status === 400
-        ? 'The actor must be an existing Practitioner, for example Practitioner/1903.'
-        : `The dashboard could not be loaded (HTTP ${response.status}).`);
+      showMessage(`The dashboard could not be loaded (HTTP ${response.status}).`);
       return;
     }
     const summary = await response.json();
@@ -226,12 +229,48 @@ async function load(actor) {
   }
 }
 
-form.addEventListener('submit', (event) => {
+async function start() {
+  try {
+    const response = await fetch('/api/me');
+    if (response.ok) {
+      showSignedIn(await response.json());
+      await load();
+      return;
+    }
+    showSignedOut('Sign in to see the dashboard, or continue as guest for a read-only view.');
+  } catch (error) {
+    showMessage('The server is not reachable.');
+  }
+}
+
+async function signIn(username, password) {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': csrfToken() },
+    body: new URLSearchParams({ username, password }),
+  });
+  if (!response.ok) {
+    showSignedOut('Wrong user or password.');
+    return;
+  }
+  await start();
+}
+
+async function signOut() {
+  await fetch('/api/logout', { method: 'POST', headers: { 'X-XSRF-TOKEN': csrfToken() } });
+  await start();
+}
+
+loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  const actor = actorInput.value.trim();
-  storeActor(actor);
-  load(actor);
+  const data = new FormData(loginForm);
+  signIn(data.get('username'), data.get('password'));
 });
 
-actorInput.value = readStoredActor();
-load(actorInput.value);
+document.getElementById('guest-button').addEventListener('click', () => {
+  signIn(GUEST_CREDENTIALS.username, GUEST_CREDENTIALS.password);
+});
+
+document.getElementById('logout-button').addEventListener('click', signOut);
+
+start();

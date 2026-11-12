@@ -12,13 +12,12 @@ public record TransitionBody(
         String owner,
         LocalDate dueDate,
         List<String> evidence,
-        String humanDecisionBy,
         String reason) {
 
     public TransitionRequest toRequest() {
         List<String> references = evidence == null ? List.of() : evidence;
         ClosureReason closureReason = reason == null ? null : ClosureReason.fromCode(reason);
         return new TransitionRequest(
-                CaseStage.fromCode(target), owner, dueDate, references, humanDecisionBy, closureReason);
+                CaseStage.fromCode(target), owner, dueDate, references, null, closureReason);
     }
 }

@@ -8,6 +8,9 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
+import io.github.screeningloop.access.Actor;
+import io.github.screeningloop.access.ForbiddenActionException;
+import io.github.screeningloop.access.Role;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,6 +41,7 @@ class CaseServiceIntegrationTest {
     private String patient;
     private String fitResult;
     private String agent;
+    private Actor coordinator;
     private Set<String> auditIdsBefore;
 
     @BeforeEach
@@ -53,6 +57,7 @@ class CaseServiceIntegrationTest {
         fitResult = source.getIdElement().toUnqualifiedVersionless().getValue();
         patient = source.getSubject().getReference();
         agent = practitioners.getEntryFirstRep().getResource().getIdElement().toUnqualifiedVersionless().getValue();
+        coordinator = new Actor(agent, Role.COORDINATOR);
         auditIdsBefore = auditIds();
     }
 
@@ -89,10 +94,10 @@ class CaseServiceIntegrationTest {
 
     @Test
     void opensAdvancesAndLeavesProvenanceAndAudit() {
-        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE, coordinator);
         created.add(opened.getIdElement().toUnqualifiedVersionless());
         TransitionRequest request = TransitionRequest.advance(CaseStage.PATIENT_NOTIFIED, agent, DUE_DATE);
-        Task advanced = service.advance(opened.getIdElement().getIdPart(), request, agent);
+        Task advanced = service.advance(opened.getIdElement().getIdPart(), request, coordinator);
         assertThat(advanced.getBusinessStatus().getCodingFirstRep().getCode()).isEqualTo("patient-notified");
         assertThat(advanced.getMeta().getVersionId()).isEqualTo("2");
         trackProvenance(advanced);
@@ -104,11 +109,11 @@ class CaseServiceIntegrationTest {
 
     @Test
     void readsTheCaseWithItsProvenanceHistoryAndAudits() {
-        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE, coordinator);
         created.add(opened.getIdElement().toUnqualifiedVersionless());
         String id = opened.getIdElement().getIdPart();
         Task advanced = service.advance(
-                id, TransitionRequest.advance(CaseStage.PATIENT_NOTIFIED, agent, DUE_DATE), agent);
+                id, TransitionRequest.advance(CaseStage.PATIENT_NOTIFIED, agent, DUE_DATE), coordinator);
         trackProvenance(advanced);
         CaseWithHistory found = service.findCase(id, agent);
         assertThat(found.task().getIdElement().getIdPart()).isEqualTo(id);
@@ -118,11 +123,38 @@ class CaseServiceIntegrationTest {
     }
 
     @Test
+    void refusesAClinicianWhoDoesNotOwnTheCaseWithoutWritingAnything() {
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE, coordinator);
+        created.add(opened.getIdElement().toUnqualifiedVersionless());
+        Actor stranger = new Actor("Practitioner/someone-else", Role.CLINICIAN);
+        TransitionRequest request = TransitionRequest.advance(CaseStage.PATIENT_NOTIFIED, agent, DUE_DATE);
+        assertThatThrownBy(() -> service.advance(opened.getIdElement().getIdPart(), request, stranger))
+                .isInstanceOf(ForbiddenActionException.class);
+        Task unchanged = client.read().resource(Task.class).withId(opened.getIdElement().getIdPart()).execute();
+        assertThat(unchanged.getMeta().getVersionId()).isEqualTo("1");
+    }
+
+    @Test
+    void recordsTheAuthenticatedCoordinatorAsTheHumanDecisionWhenClosingWithoutCare() {
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE, coordinator);
+        created.add(opened.getIdElement().toUnqualifiedVersionless());
+        TransitionRequest forged = TransitionRequest.closeWithoutCare(
+                agent, "Practitioner/forged-decider", ClosureReason.PATIENT_DECLINED);
+        Task closed = service.advance(opened.getIdElement().getIdPart(), forged, coordinator);
+        trackProvenance(closed);
+        assertThat(closed.getStatus()).isEqualTo(Task.TaskStatus.CANCELLED);
+        Provenance provenance = (Provenance) client.read().resource(Provenance.class)
+                .withId(new IdType(closed.getRelevantHistoryFirstRep().getReference()).getIdPart()).execute();
+        assertThat(provenance.getAgent()).extracting(entry -> entry.getWho().getReference())
+                .contains(agent).doesNotContain("Practitioner/forged-decider");
+    }
+
+    @Test
     void rejectsAStaleTransitionWithoutWritingAnything() {
-        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE, coordinator);
         created.add(opened.getIdElement().toUnqualifiedVersionless());
         TransitionRequest skip = TransitionRequest.advance(CaseStage.APPOINTMENT_BOOKED, agent, DUE_DATE);
-        assertThatThrownBy(() -> service.advance(opened.getIdElement().getIdPart(), skip, agent))
+        assertThatThrownBy(() -> service.advance(opened.getIdElement().getIdPart(), skip, coordinator))
                 .isInstanceOf(InvalidTransitionException.class);
         Task unchanged = client.read().resource(Task.class).withId(opened.getIdElement().getIdPart()).execute();
         assertThat(unchanged.getMeta().getVersionId()).isEqualTo("1");

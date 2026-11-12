@@ -2,8 +2,9 @@ package io.github.screeningloop.api;
 
 import io.github.screeningloop.dashboard.DashboardService;
 import io.github.screeningloop.dashboard.DashboardSummary;
+import io.github.screeningloop.security.AppUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,7 +19,7 @@ public class DashboardController {
     }
 
     @GetMapping
-    public DashboardSummary summarize(@RequestHeader("X-Actor") String actor) {
-        return service.summarize(actor);
+    public DashboardSummary summarize(@AuthenticationPrincipal AppUser user) {
+        return service.summarize(user.practitioner());
     }
 }
