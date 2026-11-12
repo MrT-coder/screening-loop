@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceVersionConflictException;
 import io.github.screeningloop.cases.CaseService;
 import io.github.screeningloop.cases.CaseTaskMapper;
@@ -96,6 +97,17 @@ class CaseControllerTest {
         mvc.perform(post("/api/cases/t1/transitions").header("X-Actor", ACTOR)
                         .contentType(MediaType.APPLICATION_JSON).content(TRANSITION_BODY))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void answersBadRequestWithoutLeakingTheServerMessageWhenAReferenceDoesNotExist() throws Exception {
+        when(service.advance(eq("t1"), any(TransitionRequest.class), eq(ACTOR)))
+                .thenThrow(new InvalidRequestException("HAPI-1094: Resource Practitioner/ghost not found"));
+        mvc.perform(post("/api/cases/t1/transitions").header("X-Actor", ACTOR)
+                        .contentType(MediaType.APPLICATION_JSON).content(TRANSITION_BODY))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(
+                        "The request refers to a resource that does not exist or is not valid."));
     }
 
     @Test

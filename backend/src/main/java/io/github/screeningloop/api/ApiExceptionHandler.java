@@ -1,5 +1,6 @@
 package io.github.screeningloop.api;
 
+import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceVersionConflictException;
 import io.github.screeningloop.cases.InvalidTransitionException;
@@ -20,6 +21,12 @@ public class ApiExceptionHandler {
     public ProblemDetail handleConflict(ResourceVersionConflictException exception) {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, "The case was changed by someone else. Reload it and try again.");
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ProblemDetail handleInvalidReference(InvalidRequestException exception) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "The request refers to a resource that does not exist or is not valid.");
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
