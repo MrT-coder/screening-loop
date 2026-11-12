@@ -37,6 +37,6 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "The case does not exist.");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "The requested resource does not exist.");
     }
 }
