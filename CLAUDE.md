@@ -64,7 +64,7 @@ The LLM receives only opaque placeholders (for example `{{APPOINTMENT_DATE}}`) a
   (the version HAPI 8.12.1 itself is built against). Maven needs `JAVA_HOME` pointing to a JDK 21; the build fails otherwise.
 - LOINC for laboratory codes (include the LOINC copyright notice). **SNOMED CT is out of scope** (licensing for Ecuador unconfirmed); use a small custom `CodeSystem` and document it as a path-to-production item.
 - Docker Compose (`docker compose up -d`): PostgreSQL 17 + official HAPI JPA server (`hapiproject/hapi:v8.12.0-2`) at
-  `http://127.0.0.1:8090/fhir`, config in `infra/hapi/application.yaml`. Our backend uses port 8080.
+  `http://127.0.0.1:8090/fhir`, config in `infra/hapi/application.yaml`. Our backend uses port 8082 (8080 is taken by another local service).
   Cloudflare Tunnel for the public URL, guest mode for reviewers.
 - Seed data: `mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=seed
   "-Dspring-boot.run.arguments=--seed.synthea-directory=<path to Synthea fhir output>"` loads the reference bundles,
