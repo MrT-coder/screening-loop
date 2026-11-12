@@ -22,7 +22,7 @@ class ChatServiceTest {
     private static final int AGE = 50;
 
     private final PatientSummaryService summaries = mock(PatientSummaryService.class);
-    private final ChatService service = new ChatService(summaries, Clock.systemUTC());
+    private final ChatService service = new ChatService(summaries, Clock.systemUTC(), ReplyRewriter.none());
 
     private PatientSummary summaryWithMedication() {
         return new PatientSummary(PATIENT_ID, "Ana", "female", AGE, List.of(), List.of(),

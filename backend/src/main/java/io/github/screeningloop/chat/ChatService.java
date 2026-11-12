@@ -12,9 +12,9 @@ public class ChatService {
     private final IntentClassifier classifier = new IntentClassifier();
     private final ChatComposer composer;
 
-    public ChatService(PatientSummaryService summaries, Clock clock) {
+    public ChatService(PatientSummaryService summaries, Clock clock, ReplyRewriter rewriter) {
         this.summaries = summaries;
-        this.composer = new ChatComposer(clock);
+        this.composer = new ChatComposer(clock, rewriter);
     }
 
     public ChatReply answer(String patientId, String text) {

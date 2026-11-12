@@ -25,10 +25,17 @@ public class ChatComposer {
     private static final String PENDING_DATE = "a date that is still being confirmed";
 
     private final PlaceholderResolver resolver = new PlaceholderResolver();
+    private final RewriteValidator validator = new RewriteValidator(resolver);
     private final Clock clock;
+    private final ReplyRewriter rewriter;
 
     public ChatComposer(Clock clock) {
+        this(clock, ReplyRewriter.none());
+    }
+
+    public ChatComposer(Clock clock, ReplyRewriter rewriter) {
         this.clock = clock;
+        this.rewriter = rewriter;
     }
 
     public String compose(Intent intent, PatientSummary summary) {
@@ -101,7 +108,11 @@ public class ChatComposer {
     }
 
     private String render(Intent intent, String template, Map<String, String> values) {
-        return resolver.resolve(template, values, ALLOWED_PLACEHOLDERS.get(intent));
+        Set<String> allowed = ALLOWED_PLACEHOLDERS.get(intent);
+        String wording = rewriter.rewrite(template)
+                .filter(candidate -> validator.isValid(template, candidate, allowed))
+                .orElse(template);
+        return resolver.resolve(wording, values, allowed);
     }
 
     private String formatDate(String isoDateOrDateTime) {

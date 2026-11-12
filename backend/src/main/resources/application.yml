@@ -17,6 +17,10 @@ management:
         include: health
 
 screening:
+  llm:
+    enabled: false
+    api-key: ${GROQ_API_KEY:}
+    model: llama-3.1-8b-instant
   users:
     - username: coordinator
       password: coordinator-demo
