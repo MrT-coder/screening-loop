@@ -103,6 +103,21 @@ class CaseServiceIntegrationTest {
     }
 
     @Test
+    void readsTheCaseWithItsProvenanceHistoryAndAudits() {
+        Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
+        created.add(opened.getIdElement().toUnqualifiedVersionless());
+        String id = opened.getIdElement().getIdPart();
+        Task advanced = service.advance(
+                id, TransitionRequest.advance(CaseStage.PATIENT_NOTIFIED, agent, DUE_DATE), agent);
+        trackProvenance(advanced);
+        CaseWithHistory found = service.findCase(id, agent);
+        assertThat(found.task().getIdElement().getIdPart()).isEqualTo(id);
+        assertThat(found.history()).hasSize(1);
+        assertThat(found.history().get(0).getActivity().getCodingFirstRep().getCode()).isEqualTo("patient-notified");
+        assertThat(newAuditIds()).hasSize(1);
+    }
+
+    @Test
     void rejectsAStaleTransitionWithoutWritingAnything() {
         Task opened = service.openCase(patient, fitResult, agent, DUE_DATE);
         created.add(opened.getIdElement().toUnqualifiedVersionless());

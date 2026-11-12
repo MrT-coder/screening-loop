@@ -1,6 +1,7 @@
 package io.github.screeningloop.api;
 
 import io.github.screeningloop.cases.CaseService;
+import io.github.screeningloop.cases.CaseWithHistory;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,12 @@ public class CaseController {
             @RequestHeader(ACTOR_HEADER) String actor,
             @Valid @RequestBody TransitionBody body) {
         return CaseView.from(service.advance(id, body.toRequest(), actor));
+    }
+
+    @GetMapping("/{id}")
+    public CaseDetail detail(@PathVariable String id, @RequestHeader(ACTOR_HEADER) String actor) {
+        CaseWithHistory found = service.findCase(id, actor);
+        return CaseDetail.from(found.task(), found.history());
     }
 
     @GetMapping

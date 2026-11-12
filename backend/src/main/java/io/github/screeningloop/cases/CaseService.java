@@ -7,6 +7,8 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Provenance;
 import org.hl7.fhir.r4.model.Task;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +52,32 @@ public class CaseService {
         client.create().resource(auditEvents.forQuery(agent, OPEN_CASES_QUERY, clock.instant())).execute();
         return bundle.getEntry().stream()
                 .map(entry -> (Task) entry.getResource())
+                .toList();
+    }
+
+    public CaseWithHistory findCase(String taskId, String agent) {
+        Task task = readTask(taskId);
+        List<Provenance> history = loadHistory(task);
+        client.create().resource(auditEvents.forQuery(agent, "Task/" + taskId, clock.instant())).execute();
+        return new CaseWithHistory(task, history);
+    }
+
+    private List<Provenance> loadHistory(Task task) {
+        List<String> ids = task.getRelevantHistory().stream()
+                .map(reference -> new IdType(reference.getReference()).getIdPart())
+                .toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Bundle bundle = client.search()
+                .forResource(Provenance.class)
+                .where(Provenance.RES_ID.exactly().codes(ids))
+                .count(PAGE_SIZE)
+                .cacheControl(new CacheControlDirective().setNoCache(true))
+                .returnBundle(Bundle.class)
+                .execute();
+        return bundle.getEntry().stream()
+                .map(entry -> (Provenance) entry.getResource())
                 .toList();
     }
 

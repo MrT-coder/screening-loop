@@ -9,15 +9,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceVersionConflictException;
+import io.github.screeningloop.cases.CaseCodes;
 import io.github.screeningloop.cases.CaseService;
 import io.github.screeningloop.cases.CaseTaskMapper;
 import io.github.screeningloop.cases.CaseTransitionPolicy;
+import io.github.screeningloop.cases.CaseWithHistory;
 import io.github.screeningloop.cases.InvalidTransitionException;
 import io.github.screeningloop.cases.TransitionRequest;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Provenance;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Task;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,6 +116,27 @@ class CaseControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value(
                         "The request refers to a resource that does not exist or is not valid."));
+    }
+
+    @Test
+    void returnsTheCaseDetailWithItsHistory() throws Exception {
+        Provenance provenance = new Provenance();
+        provenance.setRecorded(Date.from(Instant.parse("2026-11-01T10:00:00Z")));
+        provenance.setActivity(new CodeableConcept(new Coding(CaseCodes.STAGE_SYSTEM, "patient-notified", null)));
+        provenance.addAgent().setWho(new Reference(ACTOR));
+        when(service.findCase("t1", ACTOR)).thenReturn(new CaseWithHistory(storedTask(), List.of(provenance)));
+        mvc.perform(get("/api/cases/t1").header("X-Actor", ACTOR))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summary.id").value("t1"))
+                .andExpect(jsonPath("$.history[0].stage").value("patient-notified"))
+                .andExpect(jsonPath("$.history[0].agents[0]").value(ACTOR));
+    }
+
+    @Test
+    void answersNotFoundForAnUnknownCaseAndRequiresAnActor() throws Exception {
+        when(service.findCase("ghost", ACTOR)).thenThrow(new ResourceNotFoundException("missing"));
+        mvc.perform(get("/api/cases/ghost").header("X-Actor", ACTOR)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/cases/t1")).andExpect(status().isBadRequest());
     }
 
     @Test
