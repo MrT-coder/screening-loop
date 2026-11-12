@@ -36,8 +36,9 @@ public class SecurityConfiguration {
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/api/login").permitAll()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/api/login", "/api/chat/liveness", "/api/chat/verify").permitAll()
+                        .requestMatchers("/api/chat/**").hasRole("PATIENT")
+                        .requestMatchers("/api/**").hasAnyRole("COORDINATOR", "CLINICIAN", "GUEST")
                         .anyRequest().permitAll())
                 .formLogin(login -> login
                         .loginProcessingUrl("/api/login")

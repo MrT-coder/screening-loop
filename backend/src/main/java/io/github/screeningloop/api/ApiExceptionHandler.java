@@ -5,6 +5,8 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceVersionConflictException;
 import io.github.screeningloop.access.ForbiddenActionException;
 import io.github.screeningloop.cases.InvalidTransitionException;
+import io.github.screeningloop.identity.IdentityCheckFailedException;
+import io.github.screeningloop.identity.TooManyAttemptsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +18,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidTransitionException.class)
     public ProblemDetail handleInvalidTransition(InvalidTransitionException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+    }
+
+    @ExceptionHandler(IdentityCheckFailedException.class)
+    public ProblemDetail handleIdentityFailure(IdentityCheckFailedException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ProblemDetail handleTooManyAttempts(TooManyAttemptsException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
     }
 
     @ExceptionHandler(ForbiddenActionException.class)
