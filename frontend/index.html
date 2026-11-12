@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screening Loop Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">SL</span>
+      <div>
+        <h1>Screening Loop <span class="chip chip-neutral">Prototype</span></h1>
+        <p class="subtitle">Colorectal screening: positive FIT to documented closure</p>
+      </div>
+    </div>
+    <form id="actor-form" class="actor">
+      <label for="actor">Acting as</label>
+      <input id="actor" name="actor" type="text" autocomplete="off" spellcheck="false">
+      <button type="submit">Load</button>
+    </form>
+  </header>
+
+  <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool and not validated for care.</p>
+  <p id="message" class="message" role="status" hidden></p>
+
+  <main id="content" hidden>
+    <div class="page-head">
+      <h2 class="page-title">Screening pathway overview</h2>
+      <p class="page-subtitle">Every positive FIT result, from issuance to documented closure.</p>
+    </div>
+
+    <section aria-labelledby="kpi-title">
+      <h2 id="kpi-title" class="visually-hidden">Key figures</h2>
+      <div id="kpis" class="kpis"></div>
+    </section>
+
+    <section aria-labelledby="stage-title" class="panel">
+      <div class="panel-head">
+        <h2 id="stage-title">Cases by lifecycle stage</h2>
+        <p class="legend">
+          <span class="legend-item"><span class="swatch swatch-open"></span>Open stages</span>
+          <span class="legend-item"><span class="swatch swatch-closed"></span>Closed outcomes</span>
+        </p>
+      </div>
+      <div id="stages" class="stages"></div>
+    </section>
+
+    <section aria-labelledby="overdue-title" class="panel">
+      <div class="panel-head">
+        <h2 id="overdue-title">Overdue cases</h2>
+        <span id="overdue-count" class="chip chip-warn"></span>
+      </div>
+      <div id="overdue"></div>
+    </section>
+
+    <div class="split">
+      <section aria-labelledby="rejected-title" class="panel">
+        <div class="panel-head">
+          <h2 id="rejected-title">Rejected referrals</h2>
+          <span id="rejected-count" class="chip chip-danger"></span>
+        </div>
+        <div id="rejected"></div>
+      </section>
+
+      <section aria-labelledby="unassigned-title" class="panel">
+        <div class="panel-head">
+          <h2 id="unassigned-title">Ownership</h2>
+          <span id="unassigned-count" class="chip chip-ok"></span>
+        </div>
+        <div id="unassigned"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</footer>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
