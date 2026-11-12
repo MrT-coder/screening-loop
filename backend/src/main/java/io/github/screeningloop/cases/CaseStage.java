@@ -21,6 +21,15 @@ public enum CaseStage {
         this.isTerminal = isTerminal;
     }
 
+    public static CaseStage fromCode(String code) {
+        for (CaseStage stage : values()) {
+            if (stage.code.equals(code)) {
+                return stage;
+            }
+        }
+        throw new InvalidTransitionException("Unknown case stage code: " + code);
+    }
+
     public String code() {
         return code;
     }
