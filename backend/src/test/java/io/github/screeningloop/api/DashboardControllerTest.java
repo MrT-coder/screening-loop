@@ -1,0 +1,46 @@
+package io.github.screeningloop.api;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import io.github.screeningloop.dashboard.DashboardService;
+import io.github.screeningloop.dashboard.DashboardSummary;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(DashboardController.class)
+class DashboardControllerTest {
+
+    private static final String ACTOR = "Practitioner/gp-1";
+    private static final int TOTAL = 3;
+
+    @Autowired
+    private MockMvc mvc;
+
+    @MockitoBean
+    private DashboardService service;
+
+    @Test
+    void returnsTheSummaryForTheActor() throws Exception {
+        DashboardSummary summary = new DashboardSummary(
+                TOTAL, 2, 1, 0, Map.of("result-issued", 2), List.of(), List.of(), List.of(), null);
+        when(service.summarize(ACTOR)).thenReturn(summary);
+        mvc.perform(get("/api/dashboard").header("X-Actor", ACTOR))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(TOTAL))
+                .andExpect(jsonPath("$.byStage.result-issued").value(2))
+                .andExpect(jsonPath("$.overdue").isEmpty());
+    }
+
+    @Test
+    void requiresAnActor() throws Exception {
+        mvc.perform(get("/api/dashboard")).andExpect(status().isBadRequest());
+    }
+}
