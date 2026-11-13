@@ -81,3 +81,7 @@ export function emptyState(title, detail) {
 export function shortId(reference) {
   return reference ? reference.split('/').pop() : '';
 }
+
+export function formatDate(value) {
+  return value ? String(value).slice(0, 10) : '-';
+}

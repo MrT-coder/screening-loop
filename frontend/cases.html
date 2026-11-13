@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Screening Loop Cases</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/cases.css">
 </head>
@@ -103,13 +104,13 @@
           <p class="small">Closing without care is a human decision. It is recorded under your account.</p>
         </div>
 
-        <p id="form-error" class="message" role="alert" hidden></p>
+        <p id="form-error" class="message" role="alert" tabindex="-1" hidden></p>
         <button type="submit" class="wide">Save transition</button>
       </form>
     </section>
   </main>
 
-  <footer class="footer">Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</footer>
+  <footer class="footer" id="footer" hidden>Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</footer>
 
   <script type="module" src="js/cases.js"></script>
 </body>

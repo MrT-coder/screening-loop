@@ -1,6 +1,6 @@
-import { requireStaff } from './auth.js';
+import { handleExpiredSession, requireStaff } from './auth.js';
 import {
-  buildTable, daysOverdue, element, emptyState, plural, stageChip, stageLabel, tableRow,
+  buildTable, daysOverdue, element, emptyState, plural, shortId, stageChip, stageLabel, tableRow,
 } from './ui.js';
 
 const CLOSED_STAGES = ['closed', 'closed-without-care'];
@@ -79,9 +79,9 @@ function overdueChip(dueDate) {
 function renderOverdue(summary) {
   const rows = summary.overdue.map((item) => tableRow([
     { node: caseLink(item.id), className: 'case-id' },
-    { text: item.patient },
+    { text: shortId(item.patient) },
     { node: stageChip(item.stage) },
-    { text: item.owner || 'Unassigned' },
+    { text: shortId(item.owner) || 'Unassigned' },
     { text: item.dueDate || '-' },
     { node: overdueChip(item.dueDate) },
   ]));
@@ -95,8 +95,8 @@ function renderOverdue(summary) {
 function renderRejected(summary) {
   const rows = summary.rejected.map((item) => tableRow([
     { node: caseLink(item.id), className: 'case-id' },
-    { text: item.patient },
-    { text: item.owner || 'Unassigned' },
+    { text: shortId(item.patient) },
+    { text: shortId(item.owner) || 'Unassigned' },
     { text: item.dueDate || '-' },
   ]));
   document.getElementById('rejected-count').textContent = `${summary.rejected.length} pending`;
@@ -108,7 +108,7 @@ function renderRejected(summary) {
 function renderOwnership(summary) {
   const rows = summary.unassigned.map((item) => tableRow([
     { node: caseLink(item.id), className: 'case-id' },
-    { text: item.patient },
+    { text: shortId(item.patient) },
     { node: stageChip(item.stage) },
   ]));
   const assigned = summary.open - summary.unassigned.length;
@@ -127,8 +127,11 @@ function showMessage(text) {
 async function load() {
   try {
     const response = await fetch('/api/dashboard');
+    if (handleExpiredSession(response)) {
+      return;
+    }
     if (!response.ok) {
-      showMessage(`The dashboard could not be loaded (HTTP ${response.status}).`);
+      showMessage('The dashboard could not be loaded. Please reload and try again.');
       return;
     }
     const summary = await response.json();
@@ -140,6 +143,8 @@ async function load() {
     content.hidden = false;
   } catch (error) {
     showMessage('The server is not reachable.');
+  } finally {
+    document.getElementById('footer').hidden = false;
   }
 }
 

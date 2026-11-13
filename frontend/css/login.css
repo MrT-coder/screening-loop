@@ -63,7 +63,3 @@ button.wide {
 .login .footer {
   text-align: center;
 }
-
-.footer a {
-  color: var(--primary);
-}

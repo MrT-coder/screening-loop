@@ -478,8 +478,12 @@ td.case-id {
 
 @media (max-width: 800px) {
   .split {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.panel {
+  min-width: 0;
 }
 
 .staff-nav {
@@ -499,3 +503,17 @@ td.case-id {
   background: var(--primary);
   color: var(--on-primary);
 }
+
+[hidden] {
+  display: none !important;
+}
+
+.case-link,
+.footer a {
+  display: inline-block;
+  min-height: 24px;
+  padding: 3px 2px;
+  color: var(--primary);
+  font-weight: 650;
+}
+

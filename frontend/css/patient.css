@@ -265,10 +265,6 @@ button.wide {
   min-height: 48px;
 }
 
-.footer a {
-  color: var(--primary);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .camera.is-scanning .scan-line {
     animation: none;

@@ -31,11 +31,6 @@
   color: var(--on-primary);
 }
 
-.case-link {
-  color: var(--primary);
-  font-weight: 650;
-}
-
 tr.is-selected td {
   background: var(--surface-high);
 }
@@ -65,6 +60,8 @@ tr.is-selected td {
 .summary {
   display: grid;
   gap: 10px;
+  min-height: 260px;
+  align-content: start;
 }
 
 .summary h4 {

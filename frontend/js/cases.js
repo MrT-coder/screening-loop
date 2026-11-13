@@ -1,7 +1,8 @@
-import { requireStaff } from './auth.js';
+import { handleExpiredSession, requireStaff } from './auth.js';
 import { postJson } from './http.js';
 import {
-  CLOSURE_REASONS, buildTable, daysOverdue, element, emptyState, plural, shortId, stageChip, stageLabel, tableRow,
+  CLOSURE_REASONS, buildTable, daysOverdue, element, emptyState, formatDate, plural, shortId, stageChip, stageLabel,
+  tableRow,
 } from './ui.js';
 
 const TERMINAL_STAGES = ['closed', 'closed-without-care'];
@@ -113,10 +114,10 @@ function renderPatient(patient) {
   document.getElementById('patient-summary').replaceChildren(
     header,
     listBlock('FIT results',
-      patient.fitResults.map((r) => `${r.date}: ${r.value} ${r.unit} (${r.interpretation})`), 'None recorded'),
+      patient.fitResults.map((r) => `${formatDate(r.date)}: ${r.value} ${r.unit} (${r.interpretation})`), 'None recorded'),
     listBlock('Conditions', patient.conditions.map((c) => `${c.name} (${c.status})`), 'None recorded'),
     listBlock('Active medications', patient.activeMedications, 'None recorded'),
-    listBlock('Recent procedures', patient.recentProcedures.map((p) => `${p.date}: ${p.name}`), 'None recorded'));
+    listBlock('Recent procedures', patient.recentProcedures.map((p) => `${formatDate(p.date)}: ${p.name}`), 'None recorded'));
 }
 
 function renderHistory(history) {
@@ -181,8 +182,11 @@ function prepareForm(summary, targets) {
 
 async function fetchJson(url) {
   const response = await fetch(url);
+  if (handleExpiredSession(response)) {
+    throw new Error('Your session ended.');
+  }
   if (!response.ok) {
-    throw new Error(MESSAGES[response.status] || `Request failed (HTTP ${response.status}).`);
+    throw new Error(MESSAGES[response.status] || 'This could not be loaded. Please reload and try again.');
   }
   return response.json();
 }
@@ -250,23 +254,50 @@ function buildBody() {
   return body;
 }
 
+function showFormError(text, field) {
+  formError.textContent = text;
+  formError.hidden = false;
+  (field || formError).focus();
+}
+
+function firstFormProblem() {
+  const body = buildBody();
+  if (!body.owner) {
+    return { text: 'Enter the owner of the case.', field: document.getElementById('owner') };
+  }
+  if (!TERMINAL_STAGES.includes(body.target) && !body.dueDate) {
+    return { text: 'Choose a due date for the next step.', field: document.getElementById('due-date') };
+  }
+  if (body.target === 'closed' && body.evidence.length === 0) {
+    return { text: 'Add at least one evidence reference to close the case.', field: document.getElementById('evidence') };
+  }
+  return null;
+}
+
 async function submitTransition(event) {
   event.preventDefault();
   formError.hidden = true;
+  const problem = firstFormProblem();
+  if (problem) {
+    showFormError(problem.text, problem.field);
+    return;
+  }
   const button = form.querySelector('button[type="submit"]');
   button.disabled = true;
   try {
     const response = await postJson(`/api/cases/${encodeURIComponent(selectedId)}/transitions`, buildBody());
+    if (handleExpiredSession(response)) {
+      return;
+    }
     if (!response.ok) {
-      formError.textContent = await problemText(response);
-      formError.hidden = false;
+      showFormError(await problemText(response));
       return;
     }
     await loadList();
     await openDetail(selectedId);
+    showMessage('Case updated.');
   } catch (error) {
-    formError.textContent = 'The server is not reachable.';
-    formError.hidden = false;
+    showFormError('The server is not reachable.');
   } finally {
     button.disabled = false;
   }
@@ -317,6 +348,8 @@ async function start() {
     }
   } catch (error) {
     showMessage(error.message || 'The server is not reachable.');
+  } finally {
+    document.getElementById('footer').hidden = false;
   }
 }
 

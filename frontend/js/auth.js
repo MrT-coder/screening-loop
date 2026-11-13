@@ -19,8 +19,9 @@ export async function signIn(username, password) {
   });
   if (response.ok) {
     await fetch('/api/me');
+    return 'ok';
   }
-  return response.ok;
+  return response.status === 401 || response.status === 403 ? 'invalid' : 'error';
 }
 
 export async function signOut() {
@@ -47,4 +48,12 @@ export async function requireStaff() {
 export function safeNext(value) {
   const isLocalPath = typeof value === 'string' && value.startsWith('/') && !value.startsWith('//');
   return isLocalPath ? value : '/';
+}
+
+export function handleExpiredSession(response) {
+  if (response.status === 401) {
+    goToLogin();
+    return true;
+  }
+  return false;
 }

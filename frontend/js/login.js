@@ -25,11 +25,12 @@ async function attempt(username, password) {
   setBusy(true);
   showMessage('');
   try {
-    if (await signIn(username, password)) {
+    const result = await signIn(username, password);
+    if (result === 'ok') {
       window.location.replace(nextPage());
       return;
     }
-    showMessage('Wrong user or password.');
+    showMessage(result === 'invalid' ? 'Wrong user or password.' : 'The server had a problem. Please try again.');
   } catch (error) {
     showMessage('The server is not reachable.');
   }
@@ -43,6 +44,7 @@ form.addEventListener('submit', (event) => {
   const password = String(data.get('password'));
   if (!username || !password) {
     showMessage('Enter your user and password.');
+    form.elements[username ? 'password' : 'username'].focus();
     return;
   }
   attempt(username, password);

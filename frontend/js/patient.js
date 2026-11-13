@@ -145,6 +145,7 @@ async function handleStartScan() {
     scanStatus.textContent = 'Ready';
     showMessage(error);
     showStep('details');
+    documentInput.focus();
     return;
   }
   await enterChat();
@@ -200,16 +201,32 @@ async function start() {
   showStep('details');
 }
 
+function firstInvalidField() {
+  if (!documentInput.value.trim()) {
+    return { field: documentInput, text: 'Enter your document number.' };
+  }
+  if (!documentInput.checkValidity()) {
+    return { field: documentInput, text: 'Your document number can only contain letters, numbers and dashes.' };
+  }
+  if (!birthDateInput.value) {
+    return { field: birthDateInput, text: 'Enter your date of birth.' };
+  }
+  return null;
+}
+
 detailsForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (!detailsForm.checkValidity()) {
-    showMessage('Please enter your document number and date of birth.');
+  const problem = firstInvalidField();
+  if (problem) {
+    showMessage(problem.text);
+    problem.field.focus();
     return;
   }
   showMessage('');
   scanStatus.textContent = 'Ready';
   scanBar.style.width = '0';
   showStep('face');
+  startScan.focus();
 });
 
 startScan.addEventListener('click', handleStartScan);
