@@ -5,9 +5,7 @@ import io.github.screeningloop.cases.CaseStage;
 import io.github.screeningloop.patient.PatientSummary;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,9 +18,7 @@ public class ChatComposer {
             Intent.CASE_STATUS, Set.of("NEXT_STEP_DATE", "STAGE_LABEL"),
             Intent.MEDICATIONS, Set.of("MEDICATION_LIST"),
             Intent.LATEST_EXAMS, Set.of("FIT_DATE", "PROCEDURE_LIST"));
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
     private static final int ISO_DATE_LENGTH = 10;
-    private static final String PENDING_DATE = "a date that is still being confirmed";
 
     private final PlaceholderResolver resolver = new PlaceholderResolver();
     private final RewriteValidator validator = new RewriteValidator(resolver);
@@ -39,30 +35,35 @@ public class ChatComposer {
     }
 
     public String compose(Intent intent, PatientSummary summary) {
+        return compose(intent, summary, Language.EN);
+    }
+
+    public String compose(Intent intent, PatientSummary summary, Language language) {
+        ReplyTemplates templates = ReplyTemplates.of(language);
         return switch (intent) {
-            case GREETING -> ReplyTemplates.GREETING;
-            case HELP -> ReplyTemplates.HELP;
-            case UNSUPPORTED -> ReplyTemplates.REFUSAL;
-            case CASE_STATUS -> caseStatus(summary);
-            case MEDICATIONS -> medications(summary);
-            case LATEST_EXAMS -> latestExams(summary);
+            case GREETING -> templates.greeting();
+            case HELP -> templates.help();
+            case UNSUPPORTED -> templates.refusal();
+            case CASE_STATUS -> caseStatus(summary, templates);
+            case MEDICATIONS -> medications(summary, templates);
+            case LATEST_EXAMS -> latestExams(summary, templates);
         };
     }
 
-    private String caseStatus(PatientSummary summary) {
+    private String caseStatus(PatientSummary summary, ReplyTemplates templates) {
         CaseView chosen = pickCase(summary.cases());
         if (chosen == null) {
-            return ReplyTemplates.NO_CASE;
+            return templates.noCase();
         }
         CaseStage stage = CaseStage.fromCode(chosen.stage());
         if (stage.isTerminal()) {
-            return render(Intent.CASE_STATUS, ReplyTemplates.forStage(stage), Map.of());
+            return render(Intent.CASE_STATUS, templates.forStage(stage), Map.of(), templates);
         }
         boolean isOverdue = chosen.dueDate() != null && parseDate(chosen.dueDate()).isBefore(today());
-        String template = isOverdue ? ReplyTemplates.OVERDUE : ReplyTemplates.forStage(stage);
-        String due = chosen.dueDate() == null ? PENDING_DATE : formatDate(chosen.dueDate());
+        String template = isOverdue ? templates.overdue() : templates.forStage(stage);
+        String due = chosen.dueDate() == null ? templates.pendingDate() : formatDate(chosen.dueDate(), templates);
         return render(Intent.CASE_STATUS, template,
-                Map.of("NEXT_STEP_DATE", due, "STAGE_LABEL", stage.code().replace('-', ' ')));
+                Map.of("NEXT_STEP_DATE", due, "STAGE_LABEL", templates.stageLabel(stage)), templates);
     }
 
     private CaseView pickCase(List<CaseView> cases) {
@@ -72,51 +73,53 @@ public class ChatComposer {
                 .orElse(cases.isEmpty() ? null : cases.get(0));
     }
 
-    private String medications(PatientSummary summary) {
+    private String medications(PatientSummary summary, ReplyTemplates templates) {
         if (summary.activeMedications().isEmpty()) {
-            return ReplyTemplates.NO_MEDICATIONS;
+            return templates.noMedications();
         }
-        return render(Intent.MEDICATIONS, ReplyTemplates.MEDICATIONS,
-                Map.of("MEDICATION_LIST", String.join(", ", summary.activeMedications())));
+        return render(Intent.MEDICATIONS, templates.medications(),
+                Map.of("MEDICATION_LIST", String.join(", ", summary.activeMedications())), templates);
     }
 
-    private String latestExams(PatientSummary summary) {
+    private String latestExams(PatientSummary summary, ReplyTemplates templates) {
         boolean hasFit = !summary.fitResults().isEmpty();
         boolean hasProcedures = !summary.recentProcedures().isEmpty();
         if (!hasFit && !hasProcedures) {
-            return ReplyTemplates.NO_EXAMS;
+            return templates.noExams();
         }
         StringBuilder reply = new StringBuilder();
         if (hasFit) {
             PatientSummary.FitResult fit = summary.fitResults().get(0);
-            reply.append(render(Intent.LATEST_EXAMS, fitTemplate(fit), Map.of("FIT_DATE", formatDate(fit.date()))));
+            reply.append(render(Intent.LATEST_EXAMS, fitTemplate(fit, templates),
+                    Map.of("FIT_DATE", formatDate(fit.date(), templates)), templates));
         }
         if (hasProcedures) {
             String names = String.join(", ", summary.recentProcedures().stream()
                     .map(PatientSummary.ProcedureEntry::name).toList());
             reply.append(hasFit ? " " : "")
-                    .append(render(Intent.LATEST_EXAMS, ReplyTemplates.PROCEDURES, Map.of("PROCEDURE_LIST", names)));
+                    .append(render(Intent.LATEST_EXAMS, templates.procedures(),
+                            Map.of("PROCEDURE_LIST", names), templates));
         }
         return reply.toString();
     }
 
-    private String fitTemplate(PatientSummary.FitResult fit) {
+    private String fitTemplate(PatientSummary.FitResult fit, ReplyTemplates templates) {
         if ("POS".equals(fit.interpretation())) {
-            return ReplyTemplates.FIT_POSITIVE;
+            return templates.fitPositive();
         }
-        return "NEG".equals(fit.interpretation()) ? ReplyTemplates.FIT_NEGATIVE : ReplyTemplates.FIT_UNKNOWN;
+        return "NEG".equals(fit.interpretation()) ? templates.fitNegative() : templates.fitUnknown();
     }
 
-    private String render(Intent intent, String template, Map<String, String> values) {
+    private String render(Intent intent, String template, Map<String, String> values, ReplyTemplates templates) {
         Set<String> allowed = ALLOWED_PLACEHOLDERS.get(intent);
-        String wording = rewriter.rewrite(template)
-                .filter(candidate -> validator.isValid(template, candidate, allowed))
+        String wording = rewriter.rewrite(template, templates.language())
+                .filter(candidate -> validator.isValid(template, candidate, allowed, templates.reassurancePhrase()))
                 .orElse(template);
         return resolver.resolve(wording, values, allowed);
     }
 
-    private String formatDate(String isoDateOrDateTime) {
-        return parseDate(isoDateOrDateTime).format(DATE_FORMAT);
+    private String formatDate(String isoDateOrDateTime, ReplyTemplates templates) {
+        return parseDate(isoDateOrDateTime).format(templates.dateFormat());
     }
 
     private LocalDate parseDate(String isoDateOrDateTime) {

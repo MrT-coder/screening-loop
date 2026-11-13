@@ -2,6 +2,7 @@ package io.github.screeningloop.api;
 
 import io.github.screeningloop.chat.ChatReply;
 import io.github.screeningloop.chat.ChatService;
+import io.github.screeningloop.chat.Language;
 import io.github.screeningloop.security.PatientPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,6 @@ public class ChatController {
     @PostMapping
     public ChatReply answer(
             @AuthenticationPrincipal PatientPrincipal principal, @Valid @RequestBody ChatMessageRequest body) {
-        return service.answer(principal.patientId(), body.text());
+        return service.answer(principal.patientId(), body.text(), Language.fromCode(body.language()));
     }
 }

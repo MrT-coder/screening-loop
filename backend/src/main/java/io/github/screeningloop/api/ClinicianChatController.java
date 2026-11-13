@@ -2,6 +2,7 @@ package io.github.screeningloop.api;
 
 import io.github.screeningloop.chat.ChatReply;
 import io.github.screeningloop.chat.ClinicianChatService;
+import io.github.screeningloop.chat.Language;
 import io.github.screeningloop.security.AppUser;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +27,6 @@ public class ClinicianChatController {
             @PathVariable String id,
             @AuthenticationPrincipal AppUser user,
             @Valid @RequestBody ChatMessageRequest body) {
-        return service.answer(id, user.practitioner(), body.text());
+        return service.answer(id, user.practitioner(), body.text(), Language.fromCode(body.language()));
     }
 }

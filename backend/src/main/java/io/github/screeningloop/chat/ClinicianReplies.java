@@ -2,53 +2,65 @@ package io.github.screeningloop.chat;
 
 import io.github.screeningloop.api.CaseView;
 import io.github.screeningloop.patient.PatientSummary;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 final class ClinicianReplies {
 
-    static final String HELP = "I can show recorded data for this patient: summary, FIT results, conditions, "
-            + "medications, procedures and cases.";
-    static final String READ_ONLY = "This chat is read-only and shows recorded data only. It gives no clinical "
-            + "advice. To advance or escalate a case, use the form below.";
-
+    private static final String CATALOG = "clinician";
     private static final int ISO_DATE_LENGTH = 10;
+    private static final Map<Language, MessageCatalog> CATALOGS = loadAll();
 
-    private static final Map<ClinicianIntent, Function<PatientSummary, String>> DATA_REPLIES = Map.of(
-            ClinicianIntent.SUMMARY, ClinicianReplies::summarize,
-            ClinicianIntent.FIT_RESULTS, summary -> list("FIT results", fitLines(summary),
-                    "No FIT results on record."),
-            ClinicianIntent.CONDITIONS, summary -> list("Conditions", conditionLines(summary),
-                    "No conditions on record."),
-            ClinicianIntent.MEDICATIONS, summary -> list("Active medications", summary.activeMedications(),
-                    "No active medications on record."),
-            ClinicianIntent.PROCEDURES, summary -> list("Recent procedures", procedureLines(summary),
-                    "No recent procedures on record."),
-            ClinicianIntent.CASES, summary -> list("Cases", caseLines(summary), "No cases on record."));
+    private static final Map<ClinicianIntent, BiFunction<PatientSummary, MessageCatalog, String>> DATA_REPLIES =
+            Map.of(
+                    ClinicianIntent.SUMMARY, ClinicianReplies::summarize,
+                    ClinicianIntent.FIT_RESULTS, (summary, catalog) -> list(catalog, "fit", fitLines(summary)),
+                    ClinicianIntent.CONDITIONS,
+                    (summary, catalog) -> list(catalog, "conditions", conditionLines(summary)),
+                    ClinicianIntent.MEDICATIONS,
+                    (summary, catalog) -> list(catalog, "medications", summary.activeMedications()),
+                    ClinicianIntent.PROCEDURES,
+                    (summary, catalog) -> list(catalog, "procedures", procedureLines(summary)),
+                    ClinicianIntent.CASES, (summary, catalog) -> list(catalog, "cases", caseLines(summary, catalog)));
 
     private ClinicianReplies() {
     }
 
-    static String compose(ClinicianIntent intent, PatientSummary summary) {
-        if (intent.needsPatientData()) {
-            return DATA_REPLIES.get(intent).apply(summary);
+    private static Map<Language, MessageCatalog> loadAll() {
+        Map<Language, MessageCatalog> loaded = new EnumMap<>(Language.class);
+        for (Language language : Language.values()) {
+            loaded.put(language, MessageCatalog.load(CATALOG, language));
         }
-        return intent == ClinicianIntent.HELP ? HELP : READ_ONLY;
+        return loaded;
     }
 
-    private static String summarize(PatientSummary summary) {
-        String age = summary.age() == null ? "age unknown" : summary.age() + " years";
-        String latestFit = summary.fitResults().isEmpty() ? "none"
+    static String compose(ClinicianIntent intent, PatientSummary summary) {
+        return compose(intent, summary, Language.EN);
+    }
+
+    static String compose(ClinicianIntent intent, PatientSummary summary, Language language) {
+        MessageCatalog catalog = CATALOGS.get(language);
+        if (intent.needsPatientData()) {
+            return DATA_REPLIES.get(intent).apply(summary, catalog);
+        }
+        return catalog.get(intent == ClinicianIntent.HELP ? "help" : "readOnly");
+    }
+
+    private static String summarize(PatientSummary summary, MessageCatalog catalog) {
+        String age = summary.age() == null
+                ? catalog.get("ageUnknown") : catalog.get("ageYears").formatted(summary.age());
+        String latestFit = summary.fitResults().isEmpty() ? catalog.get("none")
                 : summary.fitResults().get(0).interpretation();
-        return String.format("%s, %s, %s. Latest FIT: %s. Active medications: %d. Conditions on record: %d. "
-                        + "Cases: %d.",
-                summary.name(), summary.gender(), age, latestFit, summary.activeMedications().size(),
-                summary.conditions().size(), summary.cases().size());
+        return catalog.get("summary").formatted(summary.name(), summary.gender(), age, latestFit,
+                summary.activeMedications().size(), summary.conditions().size(), summary.cases().size());
     }
 
-    private static String list(String title, List<String> lines, String emptyText) {
-        return lines.isEmpty() ? emptyText : title + ": " + String.join("; ", lines) + ".";
+    private static String list(MessageCatalog catalog, String key, List<String> lines) {
+        return lines.isEmpty()
+                ? catalog.get(key + ".empty")
+                : catalog.get(key + ".title") + ": " + String.join("; ", lines) + ".";
     }
 
     private static List<String> fitLines(PatientSummary summary) {
@@ -70,17 +82,17 @@ final class ClinicianReplies {
                 .toList();
     }
 
-    private static List<String> caseLines(PatientSummary summary) {
-        return summary.cases().stream().map(ClinicianReplies::caseLine).toList();
+    private static List<String> caseLines(PatientSummary summary, MessageCatalog catalog) {
+        return summary.cases().stream().map(view -> caseLine(view, catalog)).toList();
     }
 
-    private static String caseLine(CaseView view) {
-        return String.format("%s is at %s, owner %s, due %s", view.id(), view.stage(), shortId(view.owner()),
-                view.dueDate() == null ? "not set" : view.dueDate());
+    private static String caseLine(CaseView view, MessageCatalog catalog) {
+        return catalog.get("caseLine").formatted(view.id(), view.stage(), shortId(view.owner(), catalog),
+                view.dueDate() == null ? catalog.get("notSet") : view.dueDate());
     }
 
-    private static String shortId(String reference) {
-        return reference == null ? "unassigned" : reference.substring(reference.lastIndexOf('/') + 1);
+    private static String shortId(String reference, MessageCatalog catalog) {
+        return reference == null ? catalog.get("unassigned") : reference.substring(reference.lastIndexOf('/') + 1);
     }
 
     private static String date(String isoDateOrDateTime) {

@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import io.github.screeningloop.chat.ChatReply;
 import io.github.screeningloop.chat.ClinicianChatService;
+import io.github.screeningloop.chat.Language;
 import io.github.screeningloop.security.SecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,24 @@ class ClinicianChatControllerTest {
 
     @Test
     void answersAStaffQuestionAboutThePatientInThePath() throws Exception {
-        when(service.answer("p1", PRACTITIONER, "medications")).thenReturn(new ChatReply("Aspirin", "MEDICATIONS"));
+        when(service.answer("p1", PRACTITIONER, "medications", Language.EN))
+                .thenReturn(new ChatReply("Aspirin", "MEDICATIONS"));
         mvc.perform(post("/api/patients/p1/chat").with(user(guest())).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"text\":\"medications\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reply").value("Aspirin"))
                 .andExpect(jsonPath("$.intent").value("MEDICATIONS"));
+    }
+
+    @Test
+    void answersInSpanishWhenTheRequestAsksForIt() throws Exception {
+        when(service.answer("p1", PRACTITIONER, "medicamentos", Language.ES))
+                .thenReturn(new ChatReply("Aspirina", "MEDICATIONS"));
+        mvc.perform(post("/api/patients/p1/chat").with(user(guest())).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"medicamentos\",\"language\":\"es\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reply").value("Aspirina"));
     }
 
     @Test

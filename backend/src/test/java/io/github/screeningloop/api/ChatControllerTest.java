@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import io.github.screeningloop.chat.ChatReply;
 import io.github.screeningloop.chat.ChatService;
+import io.github.screeningloop.chat.Language;
 import io.github.screeningloop.identity.IdentityVerifier;
 import io.github.screeningloop.identity.LivenessChallenge;
 import io.github.screeningloop.security.PatientPrincipal;
@@ -52,7 +53,7 @@ class ChatControllerTest {
 
     @Test
     void answersAPatientMessageUsingThePatientOfTheSession() throws Exception {
-        when(service.answer("3328", "which medications do I take?"))
+        when(service.answer("3328", "which medications do I take?", Language.EN))
                 .thenReturn(new ChatReply("Your active medications on record are: Aspirin.", "MEDICATIONS"));
         mvc.perform(post("/api/chat/messages").with(authentication(patient())).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(MESSAGE))
@@ -62,8 +63,26 @@ class ChatControllerTest {
     }
 
     @Test
+    void answersInSpanishWhenTheRequestAsksForIt() throws Exception {
+        when(service.answer("3328", "hola", Language.ES)).thenReturn(new ChatReply("Hola.", "GREETING"));
+        mvc.perform(post("/api/chat/messages").with(authentication(patient())).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"text\":\"hola\",\"language\":\"es\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reply").value("Hola."));
+    }
+
+    @Test
+    void fallsBackToEnglishForAnUnknownLanguage() throws Exception {
+        when(service.answer("3328", "hello", Language.EN)).thenReturn(new ChatReply("Hello.", "GREETING"));
+        mvc.perform(post("/api/chat/messages").with(authentication(patient())).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"text\":\"hello\",\"language\":\"xx\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reply").value("Hello."));
+    }
+
+    @Test
     void ignoresAnyPatientIdSentInTheBody() throws Exception {
-        when(service.answer("3328", "hello")).thenReturn(new ChatReply("Hello.", "GREETING"));
+        when(service.answer("3328", "hello", Language.EN)).thenReturn(new ChatReply("Hello.", "GREETING"));
         mvc.perform(post("/api/chat/messages").with(authentication(patient())).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"text\":\"hello\",\"patientId\":\"9999\"}"))

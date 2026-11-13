@@ -49,7 +49,7 @@ A client cannot choose or forge it.
 | `GET /api/cases/{id}` | One case, its history (one `Provenance` per transition) and `allowedTargets`, the stages it can move to |
 | `POST /api/cases` | Open a case (`patient`, `fitResult`, `owner`, `dueDate`) |
 | `POST /api/cases/{id}/transitions` | Move a case: `target`, `owner`, `dueDate`, `evidence`, `reason` |
-| `POST /api/patients/{id}/chat` | Read-only staff chat: `{ "text" }` returns `{ "reply", "intent" }` from the patient's recorded data (summary, FIT results, conditions, medications, procedures, cases). Fixed rules, no LLM. Requests to change data or for clinical advice get a fixed refusal that points to the ticket form |
+| `POST /api/patients/{id}/chat` | Read-only staff chat: `{ "text" }` returns `{ "reply", "intent" }` from the patient's recorded data (summary, FIT results, conditions, medications, procedures, cases). Fixed rules, no LLM. The body also takes the optional `language` (`en` or `es`). Requests to change data or for clinical advice get a fixed refusal that points to the ticket form |
 | `GET /api/patients/{id}/summary` | Demographics, FIT results, conditions, active medications, recent procedures, cases |
 
 Every transition writes a `Provenance` in the same FHIR transaction as the `Task` update. Every read of cases,
@@ -66,7 +66,7 @@ without care (`patient-declined`, `unreachable`, `relocated`, `care-elsewhere`, 
 | `POST /api/chat/liveness` | Issues a one-time liveness token (valid 2 minutes). **Simulated**, see limitations |
 | `POST /api/chat/verify` | Identity check: `documentNumber`, `birthDate`, `livenessToken`. `204` opens the patient session |
 | `GET /api/chat/session` | `200` while the patient session is active |
-| `POST /api/chat/messages` | `{ "text": "..." }` (max 300 chars) returns `{ "reply", "intent" }` |
+| `POST /api/chat/messages` | `{ "text": "...", "language": "en" }` (text max 300 chars) returns `{ "reply", "intent" }`. `language` is optional (`en` or `es`, default `en`); the reply is in that language |
 
 Identity check: the mock civil registry looks the patient up by a synthetic document number (the `us-ssn` identifier
 Synthea generates, in the invalid `999` range) and compares the birth date. Every failure returns the same `401`.

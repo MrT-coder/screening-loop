@@ -14,8 +14,12 @@ public class ClinicianChatService {
     }
 
     public ChatReply answer(String patientId, String agent, String text) {
+        return answer(patientId, agent, text, Language.EN);
+    }
+
+    public ChatReply answer(String patientId, String agent, String text, Language language) {
         ClinicianIntent intent = ClinicianIntent.classify(text);
         PatientSummary summary = intent.needsPatientData() ? summaries.summarize(patientId, agent) : null;
-        return new ChatReply(ClinicianReplies.compose(intent, summary), intent.name());
+        return new ChatReply(ClinicianReplies.compose(intent, summary, language), intent.name());
     }
 }
