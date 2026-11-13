@@ -41,6 +41,9 @@ The `demo-cases` profile creates the demo practitioners and 33 simulated cases, 
 Without the profile the backend starts with whatever is in HAPI. Open http://127.0.0.1:8082/ and use
 "Continue as guest" or one of the demo users listed in [docs/api.md](docs/api.md).
 
+Frontend work: add the `dev` profile (`-Dspring-boot.run.profiles=dev` from the repository root, or `demo-cases,dev`) and the backend serves
+`frontend/` from disk, so a browser reload shows every change without rebuilding. Without it the frontend is served from the jar.
+
 Checks: `mvn -f backend/pom.xml verify` runs the tests and the Checkstyle gate.
 
 Optional LLM (off by default): set `GROQ_API_KEY` and `SCREENING_LLM_ENABLED=true`.

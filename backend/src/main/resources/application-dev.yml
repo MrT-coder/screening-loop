@@ -1,0 +1,6 @@
+spring:
+  web:
+    resources:
+      static-locations: ${FRONTEND_DIR:file:../frontend/}
+      cache:
+        period: 0
