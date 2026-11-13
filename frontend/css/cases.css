@@ -127,3 +127,57 @@ tr.is-selected td {
   color: var(--muted);
   font-size: 0.82rem;
 }
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.bubble {
+  max-width: 90%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+
+.bubble.bot {
+  align-self: flex-start;
+  background: var(--surface-low);
+  border: 1px solid var(--border);
+}
+
+.bubble.me {
+  align-self: flex-end;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+}
+
+.composer input {
+  flex: 1;
+  min-height: 44px;
+}
+
+.chip-button {
+  min-height: 40px;
+  background: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  font-weight: 600;
+}

@@ -22,6 +22,7 @@ let user = null;
 let openCases = [];
 let filter = 'all';
 let selectedId = null;
+let selectedPatientId = null;
 
 function showMessage(text) {
   message.textContent = text;
@@ -192,6 +193,8 @@ async function openDetail(id) {
   showMessage('');
   try {
     const found = await fetchJson(`/api/cases/${encodeURIComponent(id)}`);
+    selectedPatientId = shortId(found.summary.patient);
+    document.getElementById('chat-log').replaceChildren();
     renderFacts(found.summary);
     renderHistory(found.history);
     prepareForm(found.summary, found.allowedTargets);
@@ -200,6 +203,22 @@ async function openDetail(id) {
     renderPatient(await fetchJson(`/api/patients/${shortId(found.summary.patient)}/summary`));
   } catch (error) {
     showMessage(error.message);
+  }
+}
+
+function addBubble(text, kind) {
+  const log = document.getElementById('chat-log');
+  log.append(element('div', `bubble ${kind}`, text));
+  log.scrollTop = log.scrollHeight;
+}
+
+async function askAboutPatient(text) {
+  addBubble(text, 'me');
+  try {
+    const response = await postJson(`/api/patients/${encodeURIComponent(selectedPatientId)}/chat`, { text });
+    addBubble(response.ok ? (await response.json()).reply : 'The question could not be answered.', 'bot');
+  } catch (error) {
+    addBubble('The server is not reachable.', 'bot');
   }
 }
 
@@ -261,6 +280,21 @@ async function loadList() {
 function bindEvents() {
   targetSelect.addEventListener('change', updateFormFields);
   form.addEventListener('submit', submitTransition);
+  document.getElementById('chat-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    input.value = '';
+    if (text) {
+      askAboutPatient(text);
+    }
+  });
+  document.getElementById('chat-chips').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-text]');
+    if (button) {
+      askAboutPatient(button.dataset.text);
+    }
+  });
   document.querySelectorAll('.filter').forEach((button) => button.addEventListener('click', () => {
     filter = button.dataset.filter;
     document.querySelectorAll('.filter').forEach((other) => other.classList.toggle('is-active', other === button));

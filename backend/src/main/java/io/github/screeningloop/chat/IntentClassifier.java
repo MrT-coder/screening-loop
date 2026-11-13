@@ -1,8 +1,6 @@
 package io.github.screeningloop.chat;
 
-import java.text.Normalizer;
 import java.util.List;
-import java.util.Locale;
 
 public class IntentClassifier {
 
@@ -26,18 +24,12 @@ public class IntentClassifier {
         if (text == null || text.isBlank()) {
             return Intent.UNSUPPORTED;
         }
-        String normalized = normalize(text);
+        String normalized = TextNormalizer.normalize(text);
         return RULES.stream()
                 .filter(rule -> rule.matches(normalized))
                 .map(Rule::intent)
                 .findFirst()
                 .orElse(Intent.UNSUPPORTED);
-    }
-
-    private String normalize(String text) {
-        String withoutAccents = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        String lettersOnly = withoutAccents.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", " ");
-        return " " + lettersOnly.trim() + " ";
     }
 
     private record Rule(Intent intent, List<String> keywords) {

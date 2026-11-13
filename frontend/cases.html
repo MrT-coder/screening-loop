@@ -53,6 +53,21 @@
       <h3>Patient summary</h3>
       <div id="patient-summary" class="summary"></div>
 
+      <h3>Ask about this patient</h3>
+      <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Patient chat"></div>
+      <div class="chips" id="chat-chips">
+        <button type="button" class="chip-button" data-text="summary">Summary</button>
+        <button type="button" class="chip-button" data-text="FIT results">FIT results</button>
+        <button type="button" class="chip-button" data-text="medications">Medications</button>
+        <button type="button" class="chip-button" data-text="case status">Case status</button>
+      </div>
+      <form id="chat-form" class="composer" novalidate>
+        <label for="chat-input" class="visually-hidden">Your question</label>
+        <input id="chat-input" type="text" maxlength="300" autocomplete="off"
+               placeholder="Read-only: ask about recorded data">
+        <button type="submit">Ask</button>
+      </form>
+
       <h3>History</h3>
       <ol id="history" class="timeline"></ol>
 
