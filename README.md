@@ -7,6 +7,28 @@ A prototype for the Future Health Digital Innovation Challenge (Challenge 05). E
 > **Status:** the backend is complete. The staff login, dashboard, case workspace (with a read-only clinician chat) and patient chat pages work. All data is synthetic. This is not a medical device and makes no clinical claims.
 > See [assumptions and limitations](docs/assumptions-and-limitations.md).
 
+## About the challenge
+
+This project was built for the **Future Health Digital Innovation Challenge** (Future Health, Abu Dhabi, run on
+Hack2skill), **Challenge 05: Closing the Screening-to-Care Loop**. The challenge asks for a solution that makes sure an
+abnormal screening result is followed by completed care, instead of being issued and forgotten.
+
+We picked **colorectal cancer screening**: a positive FIT (faecal immunochemical test) result opens a case that must be
+followed up until it is closed with evidence or by a recorded human decision.
+
+| What the challenge looks for | Where it lives here |
+|------------------------------|---------------------|
+| End-to-end case visibility | One FHIR `Task` per case, history from `Provenance`, case workspace |
+| Clear ownership and timely progression | Owner and due date on every stage, overdue / rejected / unassigned views |
+| Patient-centred communication | Closed-domain patient chat with reassuring, template-based answers |
+| Cross-provider coordination | FHIR R4 data model, referral stages, clinician workspace with tickets |
+| Safe, human-governed escalation | Closure needs evidence or a coordinator's recorded decision and reason |
+| Closure and impact measures | Days to closure, referral acceptance rate, drop-off reasons |
+
+The work started on 11 November 2026, during the challenge. All data is **synthetic**: patients come from
+[Synthea](https://github.com/synthetichealth/synthea) and the care-coordination events (referrals, owners, deadlines,
+closures) are simulated by this code. Nothing here is clinically validated and it is not a medical device.
+
 ## Idea in one minute
 
 - A positive screening result opens a **case**, tracked from issuance to documented closure.
@@ -54,6 +76,7 @@ backend/    API and case state machine (Spring Boot, HAPI FHIR)
 frontend/   Login, dashboard, case workspace and patient chat (plain HTML, CSS, JavaScript)
 docs/       API, case model, assumptions and limitations, data sources and licences
 infra/      HAPI configuration for Docker Compose
+deploy/     Compose file for OpenMediaVault; see docs/deployment.md
 ```
 
 ## Documentation
@@ -61,7 +84,8 @@ infra/      HAPI configuration for Docker Compose
 - [API and roles](docs/api.md)
 - [Case model](docs/case-model.md)
 - [Assumptions and limitations](docs/assumptions-and-limitations.md)
-- [Data sources and licences](docs/data-sources-and-licences.md)
+- [Data sources and licences](docs/data-sources-and-licences.md), [third-party licence list](docs/third-party-licences.txt)
+- [Deployment](docs/deployment.md)
 - [FHIR reference](docs/fhir-reference.md), [Synthea findings](docs/synthea-findings.md), [FIT cutoff](docs/fit-cutoff.md)
 
 ## Licence
