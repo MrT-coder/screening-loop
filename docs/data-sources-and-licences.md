@@ -34,7 +34,24 @@ distribute a terminology. We drop `Claim` and `ExplanationOfBenefit` resources w
 | Docker, Docker Compose | Local environment | Apache-2.0 (Compose) | to verify |
 | Frontend | Plain HTML, CSS and JavaScript, no third-party libraries and no web fonts | n/a | ours |
 
-A full, machine-generated dependency licence list has **not** been produced yet; do it before submission.
+### Runtime dependencies (machine generated)
+
+[third-party-licences.txt](third-party-licences.txt) lists the 81 compile and runtime dependencies of the backend with
+their licences, produced on 2026-11-12 with `org.codehaus.mojo:license-maven-plugin:2.4.0:add-third-party`
+(scopes `compile` and `runtime`). Summary: 71 are Apache-2.0 under various spellings, 3 MIT, plus the exceptions below.
+
+| Component | Licence | Note |
+|-----------|---------|------|
+| Logback Classic and Core | EPL-2.0 or LGPL-2.1-only (dual) | Used as a library, unmodified |
+| Saxon-HE (via HAPI FHIR) | MPL-2.0 | Unmodified |
+| Jakarta Annotations API | EPL-2.0 with GPL-2.0 Classpath Exception | Unmodified |
+| ICU4J | Unicode-3.0 | |
+| HdrHistogram, LatencyUtils | BSD-2-Clause / CC0 (public domain) | |
+| Checker Qual | MIT | |
+
+Test-only libraries (JUnit 5, Mockito, AssertJ and the Spring test modules) are not shipped. Regenerate the list after
+any dependency change. The remaining **to verify** items are the container images (HAPI JPA server, PostgreSQL), the
+Checkstyle build plugin and the Meta Llama licence for the optional Groq model.
 
 ## Services (optional)
 
