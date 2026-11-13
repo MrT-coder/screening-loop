@@ -4,6 +4,7 @@ services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    mem_limit: 192m
     environment:
       POSTGRES_DB: hapi
       POSTGRES_USER: hapi
@@ -19,10 +20,12 @@ services:
   fhir:
     image: hapiproject/hapi:v8.12.0-2
     restart: unless-stopped
+    mem_limit: ${FHIR_MEM_LIMIT:-768m}
     depends_on:
       db:
         condition: service_healthy
     environment:
+      JAVA_TOOL_OPTIONS: ${FHIR_JAVA_OPTS:--Xms128m -Xmx512m -XX:+UseSerialGC}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hapi
       SPRING_DATASOURCE_USERNAME: hapi
       SPRING_DATASOURCE_PASSWORD: ${HAPI_DB_PASSWORD:?set HAPI_DB_PASSWORD}
@@ -32,9 +35,11 @@ services:
   app:
     image: screening-loop-app:local
     restart: unless-stopped
+    mem_limit: ${APP_MEM_LIMIT:-384m}
     depends_on:
       - fhir
     environment:
+      JAVA_TOOL_OPTIONS: ${APP_JAVA_OPTS:--Xms64m -Xmx256m -XX:+UseSerialGC}
       COORDINATOR_PASSWORD: ${COORDINATOR_PASSWORD:?set COORDINATOR_PASSWORD}
       GP1_PASSWORD: ${GP1_PASSWORD:?set GP1_PASSWORD}
       GP2_PASSWORD: ${GP2_PASSWORD:?set GP2_PASSWORD}
