@@ -52,15 +52,39 @@ closures) are simulated by this code. Nothing here is clinically validated and i
 
 Requirements: JDK 21 (`JAVA_HOME` must point to it), Maven, Docker.
 
+### Quick start with the demo data
+
+The synthetic patients and the simulated cases are published as a database dump (5 MB) in the
+[demo-data-v1 release](https://github.com/MrT-coder/screening-loop/releases/tag/demo-data-v1), so you see exactly what
+we show in the demo.
+
 ```
-docker compose up -d                       # PostgreSQL 17 and HAPI FHIR at http://127.0.0.1:8090/fhir
-# load the Synthea patients once (see CLAUDE.md for the seed command)
+git clone https://github.com/MrT-coder/screening-loop.git
+cd screening-loop
+docker compose up -d db                    # PostgreSQL 17 only, HAPI must not start before the restore
+curl -L -o hapi-demo-data.sql.gz https://github.com/MrT-coder/screening-loop/releases/download/demo-data-v1/hapi-demo-data.sql.gz
+gunzip -c hapi-demo-data.sql.gz | docker compose exec -T db psql -U hapi -d hapi -q
+docker compose up -d fhir                  # HAPI FHIR at http://127.0.0.1:8090/fhir, the first start takes a minute or two
+mvn -f backend/pom.xml spring-boot:run
+```
+
+Open http://127.0.0.1:8082/ and use "Continue as guest", or one of the demo users listed in
+[docs/api.md](docs/api.md). The patient chat is at http://127.0.0.1:8082/patient.html and lists four demo patients.
+
+### Regenerate the data from scratch
+
+Only needed if you want different patients. Generate them with Synthea (we used seed 7, 2000 patients, ages 50 to 75,
+module `colorectal_cancer`), then load them and create the simulated cases:
+
+```
+java -jar synthea-with-dependencies.jar -s 7 -p 2000 -a 50-74 -m colorectal_cancer   --exporter.baseDirectory=<out> --exporter.fhir.export=true
+docker compose up -d
+mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=seed   "-Dspring-boot.run.arguments=--seed.synthea-directory=<out>/fhir"
 mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=demo-cases
 ```
 
-The `demo-cases` profile creates the demo practitioners and 33 simulated cases, and skips if cases already exist.
-Without the profile the backend starts with whatever is in HAPI. Open http://127.0.0.1:8082/ and use
-"Continue as guest" or one of the demo users listed in [docs/api.md](docs/api.md).
+Synthea output depends on its build, so the patients may differ from ours, and the demo patients listed on the patient
+page may not exist in your data. Run the seed once per database: it uses plain `POST`.
 
 Frontend work: add the `dev` profile (`-Dspring-boot.run.profiles=dev` from the repository root, or `demo-cases,dev`) and the backend serves
 `frontend/` from disk, so a browser reload shows every change without rebuilding. Without it the frontend is served from the jar.
