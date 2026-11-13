@@ -1,3 +1,5 @@
+import { csrfToken } from './http.js';
+
 const GUEST_CREDENTIALS = { username: 'guest', password: 'guest-demo' };
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const CLOSED_STAGES = ['closed', 'closed-without-care'];
@@ -21,11 +23,6 @@ const userInfo = document.getElementById('user-info');
 const userLabel = document.getElementById('user-label');
 const message = document.getElementById('message');
 const content = document.getElementById('content');
-
-function csrfToken() {
-  const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='));
-  return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
-}
 
 function element(tag, className, text) {
   const node = document.createElement(tag);

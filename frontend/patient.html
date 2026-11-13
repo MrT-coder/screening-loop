@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screening Loop Patient Chat</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/patient.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">SL</span>
+      <div>
+        <h1>Screening Loop <span class="chip chip-neutral">Prototype</span></h1>
+        <p class="subtitle">Your screening follow-up</p>
+      </div>
+    </div>
+    <button type="button" id="end-session" class="secondary" hidden>End session</button>
+  </header>
+
+  <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool.</p>
+
+  <main class="patient">
+    <ol class="stepper" aria-label="Progress">
+      <li id="mark-details" class="step">1 Your details</li>
+      <li id="mark-face" class="step">2 Quick face check</li>
+      <li id="mark-chat" class="step">3 Chat</li>
+    </ol>
+
+    <p id="message" class="message" role="alert" hidden></p>
+
+    <section id="step-details" class="card" aria-labelledby="details-title" hidden>
+      <h2 id="details-title">Check your screening case</h2>
+      <p class="lead">First we need to confirm it is you. This takes less than a minute.</p>
+      <form id="details-form" novalidate>
+        <label for="document">Document number</label>
+        <input id="document" name="document" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+               maxlength="32" pattern="[A-Za-z0-9\-]+" required>
+        <label for="birth-date">Date of birth</label>
+        <input id="birth-date" name="birthDate" type="date" autocomplete="off" required>
+        <button type="submit" class="wide">Continue</button>
+      </form>
+
+      <details class="demo">
+        <summary>Demo patients (synthetic)</summary>
+        <p class="small">These people do not exist. Pick one to fill the form.</p>
+        <ul id="demo-list" class="demo-list"></ul>
+      </details>
+    </section>
+
+    <section id="step-face" class="card" aria-labelledby="face-title" hidden>
+      <h2 id="face-title">Quick face check</h2>
+      <div class="camera" id="camera">
+        <video id="video" playsinline muted aria-label="Camera preview"></video>
+        <div class="camera-placeholder" id="camera-placeholder" aria-hidden="true">
+          <span>Camera preview</span>
+        </div>
+        <div class="oval" aria-hidden="true"></div>
+        <div class="scan-line" id="scan-line" aria-hidden="true"></div>
+      </div>
+      <p class="caption" id="scan-caption">Look at the camera and blink slowly.</p>
+      <div class="progress" aria-hidden="true"><div class="progress-bar" id="scan-bar"></div></div>
+      <p class="status" id="scan-status" role="status">Ready</p>
+      <button type="button" id="start-scan" class="wide">Start face check</button>
+      <button type="button" id="back-to-details" class="secondary wide">Back</button>
+      <p class="small">Your camera is used on this device only. Nothing is uploaded or stored.
+        This step is a simulation for the demo and does not identify anyone.</p>
+    </section>
+
+    <section id="step-chat" class="card chat" aria-labelledby="chat-title" hidden>
+      <h2 id="chat-title" class="visually-hidden">Chat</h2>
+      <div id="log" class="log" role="log" aria-live="polite" aria-label="Conversation"></div>
+      <div class="chips" id="chips">
+        <button type="button" class="chip-button" data-text="What is the status of my case?">Status of my case</button>
+        <button type="button" class="chip-button" data-text="Which medications am I taking?">My medications</button>
+        <button type="button" class="chip-button" data-text="What were my latest exams?">My latest exams</button>
+      </div>
+      <form id="chat-form" class="composer" novalidate>
+        <label for="chat-input" class="visually-hidden">Your message</label>
+        <input id="chat-input" name="text" type="text" maxlength="300" autocomplete="off"
+               placeholder="Ask about your case, medications or exams">
+        <button type="submit">Send</button>
+      </form>
+      <p class="small">A positive screening result is not a diagnosis. For any medical question, contact your care team.</p>
+    </section>
+  </main>
+
+  <footer class="footer"><a href="/">Staff dashboard</a></footer>
+
+  <script type="module" src="js/patient.js"></script>
+</body>
+</html>
