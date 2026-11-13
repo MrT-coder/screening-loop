@@ -1,16 +1,13 @@
 import { handleExpiredSession, requireStaff } from './auth.js';
 import { postJson } from './http.js';
+import { getLanguage, t, tp } from './i18n.js';
 import {
-  CLOSURE_REASONS, buildTable, daysOverdue, element, emptyState, formatDate, plural, shortId, stageChip, stageLabel,
-  tableRow,
+  CLOSURE_REASON_CODES, buildTable, closureReasonLabel, daysOverdue, element, emptyState, formatDate, shortId,
+  stageChip, stageLabel, tableRow,
 } from './ui.js';
 
 const TERMINAL_STAGES = ['closed', 'closed-without-care'];
-const MESSAGES = {
-  403: 'You are not allowed to make this change.',
-  404: 'This case no longer exists.',
-  409: 'Someone else changed this case. Reload it and try again.',
-};
+const KNOWN_STATUSES = [403, 404, 409];
 
 const message = document.getElementById('message');
 const content = document.getElementById('content');
@@ -24,6 +21,14 @@ let openCases = [];
 let filter = 'all';
 let selectedId = null;
 let selectedPatientId = null;
+
+function statusMessage(status) {
+  return KNOWN_STATUSES.includes(status) ? t(`cases.error.${status}`) : null;
+}
+
+function ownerText(reference) {
+  return shortId(reference) || t('common.unassigned');
+}
 
 function showMessage(text) {
   message.textContent = text;
@@ -60,21 +65,21 @@ function caseLink(id) {
 
 function renderList() {
   const visible = openCases.filter(matchesFilter);
-  document.getElementById('list-count').textContent = plural(visible.length, 'case');
+  document.getElementById('list-count').textContent = tp('unit.case', visible.length);
   const rows = visible.map((item) => {
     const row = tableRow([
       { node: caseLink(item.id), className: 'case-id' },
       { text: shortId(item.patient) },
       { node: stageChip(item.stage) },
-      { text: shortId(item.owner) || 'Unassigned' },
+      { text: ownerText(item.owner) },
       { text: item.dueDate || '-' },
     ]);
     row.classList.toggle('is-selected', item.id === selectedId);
     return row;
   });
   document.getElementById('case-list').replaceChildren(rows.length === 0
-    ? emptyState('No cases here', 'Try another filter.')
-    : buildTable(['Case', 'Patient', 'Stage', 'Owner', 'Due'], rows));
+    ? emptyState(t('cases.empty.title'), t('cases.empty.detail'))
+    : buildTable([t('table.case'), t('table.patient'), t('table.stage'), t('table.owner'), t('table.due')], rows));
 }
 
 function fact(term, value) {
@@ -83,13 +88,13 @@ function fact(term, value) {
 
 function renderFacts(summary) {
   const due = summary.dueDate || '-';
-  const late = isOverdue(summary) ? ` (${plural(daysOverdue(summary.dueDate), 'day')} overdue)` : '';
+  const late = isOverdue(summary) ? ` (${tp('dashboard.daysOverdue', daysOverdue(summary.dueDate))})` : '';
   document.getElementById('detail-facts').replaceChildren(
-    ...fact('Case', summary.id),
-    ...fact('Patient', shortId(summary.patient)),
-    ...fact('FIT result', shortId(summary.fitResult)),
-    ...fact('Owner', shortId(summary.owner) || 'Unassigned'),
-    ...fact('Due', due + late));
+    ...fact(t('cases.fact.case'), summary.id),
+    ...fact(t('cases.fact.patient'), shortId(summary.patient)),
+    ...fact(t('cases.fact.fit'), shortId(summary.fitResult)),
+    ...fact(t('cases.fact.owner'), ownerText(summary.owner)),
+    ...fact(t('cases.fact.due'), due + late));
   document.getElementById('detail-stage').replaceChildren(stageChip(summary.stage));
 }
 
@@ -107,17 +112,20 @@ function listBlock(title, items, emptyText) {
 }
 
 function renderPatient(patient) {
-  const demographics = [patient.name, patient.gender, patient.age === null ? null : `${patient.age} years`]
+  const years = patient.age === null ? null : t('cases.patient.years', { age: patient.age });
+  const demographics = [patient.name, patient.gender, years]
     .filter(Boolean).join(', ');
+  const none = t('common.noneRecorded');
   const header = element('div');
-  header.append(element('h4', '', 'Patient'), element('span', '', demographics || shortId(patient.id)));
+  header.append(element('h4', '', t('cases.fact.patient')), element('span', '', demographics || shortId(patient.id)));
   document.getElementById('patient-summary').replaceChildren(
     header,
-    listBlock('FIT results',
-      patient.fitResults.map((r) => `${formatDate(r.date)}: ${r.value} ${r.unit} (${r.interpretation})`), 'None recorded'),
-    listBlock('Conditions', patient.conditions.map((c) => `${c.name} (${c.status})`), 'None recorded'),
-    listBlock('Active medications', patient.activeMedications, 'None recorded'),
-    listBlock('Recent procedures', patient.recentProcedures.map((p) => `${formatDate(p.date)}: ${p.name}`), 'None recorded'));
+    listBlock(t('cases.patient.fit'),
+      patient.fitResults.map((r) => `${formatDate(r.date)}: ${r.value} ${r.unit} (${r.interpretation})`), none),
+    listBlock(t('cases.patient.conditions'), patient.conditions.map((c) => `${c.name} (${c.status})`), none),
+    listBlock(t('cases.patient.medications'), patient.activeMedications, none),
+    listBlock(t('cases.patient.procedures'),
+      patient.recentProcedures.map((p) => `${formatDate(p.date)}: ${p.name}`), none));
 }
 
 function renderHistory(history) {
@@ -125,23 +133,25 @@ function renderHistory(history) {
     const item = element('li');
     item.append(
       element('strong', '', stageLabel(entry.stage)),
-      element('span', 'when', `${entry.recordedAt.replace('T', ' ').replace('Z', ' UTC')} by `
-        + entry.agents.map(shortId).join(', ')));
+      element('span', 'when', t('cases.historyBy', {
+        when: entry.recordedAt.replace('T', ' ').replace('Z', ' UTC'),
+        who: entry.agents.map(shortId).join(', '),
+      })));
     return item;
   });
   document.getElementById('history').replaceChildren(...(items.length === 0
-    ? [element('li', '', 'No transition recorded yet.')] : items));
+    ? [element('li', '', t('cases.noHistory'))] : items));
 }
 
 function canAdvance(summary) {
   if (TERMINAL_STAGES.includes(summary.stage)) {
-    return { allowed: false, note: 'This case is closed.' };
+    return { allowed: false, note: t('cases.note.closed') };
   }
   if (user.role === 'GUEST') {
-    return { allowed: false, note: 'Guests have read-only access.' };
+    return { allowed: false, note: t('cases.note.guest') };
   }
   if (user.role === 'CLINICIAN' && summary.owner !== user.practitioner) {
-    return { allowed: false, note: 'Only the owner or a coordinator can advance this case.' };
+    return { allowed: false, note: t('cases.note.owner') };
   }
   return { allowed: true, note: '' };
 }
@@ -175,7 +185,7 @@ function prepareForm(summary, targets) {
   form.reset();
   targetSelect.replaceChildren(...choices.map((target) => option(target, stageLabel(target))));
   document.getElementById('reason').replaceChildren(
-    ...Object.entries(CLOSURE_REASONS).map(([value, label]) => option(value, label)));
+    ...CLOSURE_REASON_CODES.map((code) => option(code, closureReasonLabel(code))));
   document.getElementById('owner').value = summary.owner || user.practitioner;
   updateFormFields();
 }
@@ -183,10 +193,10 @@ function prepareForm(summary, targets) {
 async function fetchJson(url) {
   const response = await fetch(url);
   if (handleExpiredSession(response)) {
-    throw new Error('Your session ended.');
+    throw new Error(t('cases.error.session'));
   }
   if (!response.ok) {
-    throw new Error(MESSAGES[response.status] || 'This could not be loaded. Please reload and try again.');
+    throw new Error(statusMessage(response.status) || t('cases.error.load'));
   }
   return response.json();
 }
@@ -203,7 +213,7 @@ async function openDetail(id) {
     renderHistory(found.history);
     prepareForm(found.summary, found.allowedTargets);
     detail.hidden = false;
-    document.getElementById('patient-summary').replaceChildren(element('span', 'small', 'Loading...'));
+    document.getElementById('patient-summary').replaceChildren(element('span', 'small', t('cases.loading')));
     renderPatient(await fetchJson(`/api/patients/${shortId(found.summary.patient)}/summary`));
   } catch (error) {
     showMessage(error.message);
@@ -219,22 +229,27 @@ function addBubble(text, kind) {
 async function askAboutPatient(text) {
   addBubble(text, 'me');
   try {
-    const response = await postJson(`/api/patients/${encodeURIComponent(selectedPatientId)}/chat`, { text });
-    addBubble(response.ok ? (await response.json()).reply : 'The question could not be answered.', 'bot');
+    const response = await postJson(`/api/patients/${encodeURIComponent(selectedPatientId)}/chat`,
+      { text, language: getLanguage() });
+    addBubble(response.ok ? (await response.json()).reply : t('cases.chat.failed'), 'bot');
   } catch (error) {
-    addBubble('The server is not reachable.', 'bot');
+    addBubble(t('common.unreachable'), 'bot');
   }
 }
 
 async function problemText(response) {
-  if (MESSAGES[response.status] && response.status !== 403) {
-    return MESSAGES[response.status];
+  const known = statusMessage(response.status);
+  if (known && response.status !== 403) {
+    return known;
+  }
+  if (getLanguage() !== 'en') {
+    return known || t('cases.error.save');
   }
   try {
     const problem = await response.json();
-    return problem.detail || MESSAGES[response.status] || 'The change could not be saved.';
+    return problem.detail || known || t('cases.error.save');
   } catch (error) {
-    return MESSAGES[response.status] || 'The change could not be saved.';
+    return known || t('cases.error.save');
   }
 }
 
@@ -263,13 +278,13 @@ function showFormError(text, field) {
 function firstFormProblem() {
   const body = buildBody();
   if (!body.owner) {
-    return { text: 'Enter the owner of the case.', field: document.getElementById('owner') };
+    return { text: t('cases.error.owner'), field: document.getElementById('owner') };
   }
   if (!TERMINAL_STAGES.includes(body.target) && !body.dueDate) {
-    return { text: 'Choose a due date for the next step.', field: document.getElementById('due-date') };
+    return { text: t('cases.error.dueDate'), field: document.getElementById('due-date') };
   }
   if (body.target === 'closed' && body.evidence.length === 0) {
-    return { text: 'Add at least one evidence reference to close the case.', field: document.getElementById('evidence') };
+    return { text: t('cases.error.evidence'), field: document.getElementById('evidence') };
   }
   return null;
 }
@@ -295,9 +310,9 @@ async function submitTransition(event) {
     }
     await loadList();
     await openDetail(selectedId);
-    showMessage('Case updated.');
+    showMessage(t('cases.updated'));
   } catch (error) {
-    showFormError('The server is not reachable.');
+    showFormError(t('common.unreachable'));
   } finally {
     button.disabled = false;
   }
@@ -347,7 +362,7 @@ async function start() {
       await openDetail(requested);
     }
   } catch (error) {
-    showMessage(error.message || 'The server is not reachable.');
+    showMessage(error.message || t('common.unreachable'));
   } finally {
     document.getElementById('footer').hidden = false;
   }

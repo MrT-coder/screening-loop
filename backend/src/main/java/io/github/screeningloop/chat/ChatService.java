@@ -18,10 +18,14 @@ public class ChatService {
     }
 
     public ChatReply answer(String patientId, String text) {
+        return answer(patientId, text, Language.EN);
+    }
+
+    public ChatReply answer(String patientId, String text, Language language) {
         Intent intent = classifier.classify(text);
         PatientSummary summary = intent.needsPatientData()
                 ? summaries.summarize(patientId, "Patient/" + patientId)
                 : null;
-        return new ChatReply(composer.compose(intent, summary), intent.name());
+        return new ChatReply(composer.compose(intent, summary, language), intent.name());
     }
 }

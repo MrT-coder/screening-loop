@@ -1,4 +1,5 @@
 import { csrfToken } from './http.js';
+import { onLanguageChange, t } from './i18n.js';
 
 const LOGIN_PAGE = 'login.html';
 
@@ -40,7 +41,9 @@ export async function requireStaff() {
     goToLogin();
     return null;
   }
-  document.getElementById('user-label').textContent = `${user.username} (${user.role.toLowerCase()})`;
+  const role = user.role.toLowerCase();
+  document.getElementById('user-label').textContent = `${user.username} (${t(`role.${role}`)})`;
+  onLanguageChange(() => window.location.reload());
   document.getElementById('logout-button').addEventListener('click', signOut);
   return user;
 }

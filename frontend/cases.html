@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Screening Loop Cases</title>
+  <title data-i18n="title.cases">Screening Loop Cases</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/cases.css">
@@ -13,72 +13,73 @@
     <div class="brand">
       <span class="logo" aria-hidden="true">SL</span>
       <div>
-        <h1>Screening Loop <span class="chip chip-neutral">Prototype</span></h1>
-        <p class="subtitle">Colorectal screening: positive FIT to documented closure</p>
+        <h1>Screening Loop <span class="chip chip-neutral" data-i18n="brand.prototype">Prototype</span></h1>
+        <p class="subtitle" data-i18n="brand.subtitle.pathway">Colorectal screening: positive FIT to documented closure</p>
       </div>
     </div>
-    <nav class="staff-nav" aria-label="Staff">
-      <a href="/">Dashboard</a>
-      <a href="cases.html" aria-current="page">Cases</a>
+    <nav class="staff-nav" aria-label="Staff" data-i18n-attr="aria-label:nav.label">
+      <a href="/" data-i18n="nav.dashboard">Dashboard</a>
+      <a href="cases.html" aria-current="page" data-i18n="nav.cases">Cases</a>
     </nav>
+    <div data-lang-switch></div>
     <div class="session actor">
       <span id="user-label"></span>
-      <button type="button" id="logout-button" class="secondary">Sign out</button>
+      <button type="button" id="logout-button" class="secondary" data-i18n="session.signOut">Sign out</button>
     </div>
   </header>
 
-  <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool and not validated for care.</p>
+  <p class="notice"><strong data-i18n="notice.syntheticStrong">Synthetic data only.</strong> <span data-i18n="notice.prototypeLong">Prototype for demonstration, not a clinical tool and not validated for care.</span></p>
   <p id="message" class="message" role="status" hidden></p>
 
   <main id="content" class="workspace" hidden>
     <section class="panel" aria-labelledby="list-title">
       <div class="panel-head">
-        <h2 id="list-title">Open cases</h2>
+        <h2 id="list-title" data-i18n="cases.openCases">Open cases</h2>
         <span id="list-count" class="chip chip-neutral"></span>
       </div>
-      <div class="filters" role="group" aria-label="Filter cases">
-        <button type="button" class="filter is-active" data-filter="all">All</button>
-        <button type="button" class="filter" data-filter="mine">Mine</button>
-        <button type="button" class="filter" data-filter="overdue">Overdue</button>
+      <div class="filters" role="group" aria-label="Filter cases" data-i18n-attr="aria-label:cases.filterLabel">
+        <button type="button" class="filter is-active" data-filter="all" data-i18n="cases.filter.all">All</button>
+        <button type="button" class="filter" data-filter="mine" data-i18n="cases.filter.mine">Mine</button>
+        <button type="button" class="filter" data-filter="overdue" data-i18n="cases.filter.overdue">Overdue</button>
       </div>
       <div id="case-list"></div>
     </section>
 
     <section id="detail" class="panel" aria-labelledby="detail-title" hidden>
       <div class="panel-head">
-        <h2 id="detail-title">Case</h2>
+        <h2 id="detail-title" data-i18n="cases.detailTitle">Case</h2>
         <span id="detail-stage"></span>
       </div>
       <dl id="detail-facts" class="facts"></dl>
 
-      <h3>Patient summary</h3>
+      <h3 data-i18n="cases.patientSummary">Patient summary</h3>
       <div id="patient-summary" class="summary"></div>
 
-      <h3>Ask about this patient</h3>
-      <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Patient chat"></div>
+      <h3 data-i18n="cases.askHeading">Ask about this patient</h3>
+      <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Patient chat" data-i18n-attr="aria-label:cases.chatLabel"></div>
       <div class="chips" id="chat-chips">
-        <button type="button" class="chip-button" data-text="summary">Summary</button>
-        <button type="button" class="chip-button" data-text="FIT results">FIT results</button>
-        <button type="button" class="chip-button" data-text="medications">Medications</button>
-        <button type="button" class="chip-button" data-text="case status">Case status</button>
+        <button type="button" class="chip-button" data-text="summary" data-i18n="cases.chip.summary" data-i18n-attr="data-text:cases.chip.summary.text">Summary</button>
+        <button type="button" class="chip-button" data-text="FIT results" data-i18n="cases.chip.fit" data-i18n-attr="data-text:cases.chip.fit.text">FIT results</button>
+        <button type="button" class="chip-button" data-text="medications" data-i18n="cases.chip.medications" data-i18n-attr="data-text:cases.chip.medications.text">Medications</button>
+        <button type="button" class="chip-button" data-text="case status" data-i18n="cases.chip.caseStatus" data-i18n-attr="data-text:cases.chip.caseStatus.text">Case status</button>
       </div>
       <form id="chat-form" class="composer" novalidate>
-        <label for="chat-input" class="visually-hidden">Your question</label>
+        <label for="chat-input" class="visually-hidden" data-i18n="cases.chat.question">Your question</label>
         <input id="chat-input" type="text" maxlength="300" autocomplete="off"
-               placeholder="Read-only: ask about recorded data">
-        <button type="submit">Ask</button>
+               placeholder="Read-only: ask about recorded data" data-i18n-attr="placeholder:cases.chat.placeholder">
+        <button type="submit" data-i18n="cases.chat.ask">Ask</button>
       </form>
 
-      <h3>History</h3>
+      <h3 data-i18n="cases.history">History</h3>
       <ol id="history" class="timeline"></ol>
 
-      <h3>Advance or escalate</h3>
+      <h3 data-i18n="cases.advance">Advance or escalate</h3>
       <p id="form-note" class="small" hidden></p>
       <form id="transition-form" class="ticket" novalidate hidden>
-        <label for="target">Move to</label>
+        <label for="target" data-i18n="cases.form.target">Move to</label>
         <select id="target" name="target" required></select>
 
-        <label for="owner">Owner</label>
+        <label for="owner" data-i18n="cases.form.owner">Owner</label>
         <input id="owner" name="owner" type="text" list="practitioners" autocomplete="off" spellcheck="false" required>
         <datalist id="practitioners">
           <option value="Practitioner/demo-coordinator"></option>
@@ -88,29 +89,29 @@
         </datalist>
 
         <div id="due-field">
-          <label for="due-date">Due date</label>
+          <label for="due-date" data-i18n="cases.form.dueDate">Due date</label>
           <input id="due-date" name="dueDate" type="date">
         </div>
 
         <div id="evidence-field" hidden>
-          <label for="evidence">Evidence (FHIR references, comma separated)</label>
+          <label for="evidence" data-i18n="cases.form.evidence">Evidence (FHIR references, comma separated)</label>
           <input id="evidence" name="evidence" type="text" autocomplete="off" spellcheck="false"
                  placeholder="Procedure/abc, DiagnosticReport/def">
         </div>
 
         <div id="reason-field" hidden>
-          <label for="reason">Closure reason</label>
+          <label for="reason" data-i18n="cases.form.reason">Closure reason</label>
           <select id="reason" name="reason"></select>
-          <p class="small">Closing without care is a human decision. It is recorded under your account.</p>
+          <p class="small" data-i18n="cases.form.reasonNote">Closing without care is a human decision. It is recorded under your account.</p>
         </div>
 
         <p id="form-error" class="message" role="alert" tabindex="-1" hidden></p>
-        <button type="submit" class="wide">Save transition</button>
+        <button type="submit" class="wide" data-i18n="cases.form.save">Save transition</button>
       </form>
     </section>
   </main>
 
-  <footer class="footer" id="footer" hidden>Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</footer>
+  <footer class="footer" id="footer" hidden data-i18n="footer.synthetic">Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</footer>
 
   <script type="module" src="js/cases.js"></script>
 </body>

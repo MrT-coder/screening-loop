@@ -17,16 +17,22 @@ public class RewriteValidator {
     }
 
     public boolean isValid(String original, String candidate, Set<String> allowed) {
+        return isValid(original, candidate, allowed, REASSURANCE);
+    }
+
+    public boolean isValid(String original, String candidate, Set<String> allowed, String reassurance) {
         boolean isWellFormed = candidate != null
                 && !candidate.isBlank()
                 && candidate.length() <= MAX_LENGTH
                 && !FORBIDDEN.matcher(candidate).find();
-        return isWellFormed && keepsReassurance(original, candidate) && keepsPlaceholders(original, candidate, allowed);
+        return isWellFormed
+                && keepsReassurance(original, candidate, reassurance)
+                && keepsPlaceholders(original, candidate, allowed);
     }
 
-    private boolean keepsReassurance(String original, String candidate) {
-        return !original.toLowerCase(Locale.ROOT).contains(REASSURANCE)
-                || candidate.toLowerCase(Locale.ROOT).contains(REASSURANCE);
+    private boolean keepsReassurance(String original, String candidate, String reassurance) {
+        return !original.toLowerCase(Locale.ROOT).contains(reassurance)
+                || candidate.toLowerCase(Locale.ROOT).contains(reassurance);
     }
 
     private boolean keepsPlaceholders(String original, String candidate, Set<String> allowed) {

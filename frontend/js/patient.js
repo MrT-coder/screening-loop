@@ -1,13 +1,14 @@
 import { postJson } from './http.js';
+import { getLanguage, onLanguageChange, t } from './i18n.js';
 
 const SCAN_MS = 4000;
 const TICK_MS = 100;
 
 const DEMO_PATIENTS = [
-  { label: 'Result issued, follow-up overdue', document: '999-38-6612', birthDate: '1976-10-05' },
-  { label: 'Referral rejected', document: '999-32-7580', birthDate: '1962-06-28' },
-  { label: 'Appointment booked, follow-up overdue', document: '999-95-4540', birthDate: '1960-07-30' },
-  { label: 'Follow-up closed', document: '999-72-3904', birthDate: '1955-09-27' },
+  { label: 'patient.demo.1', document: '999-38-6612', birthDate: '1976-10-05' },
+  { label: 'patient.demo.2', document: '999-32-7580', birthDate: '1962-06-28' },
+  { label: 'patient.demo.3', document: '999-95-4540', birthDate: '1960-07-30' },
+  { label: 'patient.demo.4', document: '999-72-3904', birthDate: '1955-09-27' },
 ];
 
 const STEPS = ['details', 'face', 'chat'];
@@ -52,7 +53,7 @@ function renderDemoList() {
     const item = document.createElement('li');
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = `${patient.label} (${patient.document})`;
+    button.textContent = `${t(patient.label)} (${patient.document})`;
     button.addEventListener('click', () => {
       documentInput.value = patient.document;
       birthDateInput.value = patient.birthDate;
@@ -94,7 +95,7 @@ function pause(milliseconds) {
 
 async function runScan() {
   camera.classList.add('is-scanning');
-  scanStatus.textContent = 'Scanning...';
+  scanStatus.textContent = t('patient.face.scanning');
   for (let elapsed = 0; elapsed <= SCAN_MS; elapsed += TICK_MS) {
     scanBar.style.width = `${Math.min(100, (elapsed / SCAN_MS) * 100)}%`;
     await pause(TICK_MS);
@@ -104,15 +105,15 @@ async function runScan() {
 
 async function readError(response) {
   if (response.status === 429) {
-    return 'Too many attempts. Please try again in 15 minutes.';
+    return t('patient.error.tooMany');
   }
-  return 'We could not verify your identity. Please check your details and try again.';
+  return t('patient.error.identity');
 }
 
 async function verify() {
   const liveness = await postJson('/api/chat/liveness');
   if (!liveness.ok) {
-    return 'The face check is not available right now. Please try again.';
+    return t('patient.error.face');
   }
   const { token } = await liveness.json();
   const response = await postJson('/api/chat/verify', {
@@ -133,16 +134,16 @@ async function handleStartScan() {
   scanBar.style.width = '0';
   const hasCamera = await openCamera();
   scanCaption.textContent = hasCamera
-    ? 'Look at the camera and blink slowly.'
-    : 'No camera available. Running the simulated check without it.';
+    ? t('patient.face.caption')
+    : t('patient.face.noCamera');
   await runScan();
   stopCamera();
-  scanStatus.textContent = 'Checking...';
+  scanStatus.textContent = t('patient.face.checking');
   const error = await verify();
   isBusy = false;
   startScan.disabled = false;
   if (error) {
-    scanStatus.textContent = 'Ready';
+    scanStatus.textContent = t('patient.face.ready');
     showMessage(error);
     showStep('details');
     documentInput.focus();
@@ -163,25 +164,29 @@ async function ask(text, isVisible) {
   if (isVisible) {
     addBubble(text, 'me');
   }
-  const response = await postJson('/api/chat/messages', { text });
-  if (response.status === 401 || response.status === 403) {
-    showMessage('Your session ended. Please check your details again.');
-    showStep('details');
-    return;
+  try {
+    const response = await postJson('/api/chat/messages', { text, language: getLanguage() });
+    if (response.status === 401 || response.status === 403) {
+      showMessage(t('patient.error.sessionEnded'));
+      showStep('details');
+      return;
+    }
+    if (!response.ok) {
+      addBubble(t('patient.chat.failed'), 'bot');
+      return;
+    }
+    const reply = await response.json();
+    addBubble(reply.reply, 'bot');
+  } catch (error) {
+    addBubble(t('patient.chat.failed'), 'bot');
   }
-  if (!response.ok) {
-    addBubble('Something went wrong. Please try again.', 'bot');
-    return;
-  }
-  const reply = await response.json();
-  addBubble(reply.reply, 'bot');
 }
 
 async function enterChat() {
   await fetch('/api/chat/session');
   log.replaceChildren();
   showStep('chat');
-  await ask('hello', false);
+  await ask(t('patient.chat.greeting'), false);
   chatInput.focus();
 }
 
@@ -192,24 +197,24 @@ async function start() {
     if (response.ok) {
       log.replaceChildren();
       showStep('chat');
-      await ask('hello', false);
+      await ask(t('patient.chat.greeting'), false);
       return;
     }
   } catch (error) {
-    showMessage('The server is not reachable.');
+    showMessage(t('common.unreachable'));
   }
   showStep('details');
 }
 
 function firstInvalidField() {
   if (!documentInput.value.trim()) {
-    return { field: documentInput, text: 'Enter your document number.' };
+    return { field: documentInput, text: t('patient.error.document') };
   }
   if (!documentInput.checkValidity()) {
-    return { field: documentInput, text: 'Your document number can only contain letters, numbers and dashes.' };
+    return { field: documentInput, text: t('patient.error.documentFormat') };
   }
   if (!birthDateInput.value) {
-    return { field: birthDateInput, text: 'Enter your date of birth.' };
+    return { field: birthDateInput, text: t('patient.error.birthDate') };
   }
   return null;
 }
@@ -223,7 +228,7 @@ detailsForm.addEventListener('submit', (event) => {
     return;
   }
   showMessage('');
-  scanStatus.textContent = 'Ready';
+  scanStatus.textContent = t('patient.face.ready');
   scanBar.style.width = '0';
   showStep('face');
   startScan.focus();
@@ -262,5 +267,7 @@ endSession.addEventListener('click', async () => {
   showMessage('');
   showStep('details');
 });
+
+onLanguageChange(renderDemoList);
 
 start();

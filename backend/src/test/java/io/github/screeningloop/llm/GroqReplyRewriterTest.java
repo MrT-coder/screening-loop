@@ -1,6 +1,7 @@
 package io.github.screeningloop.llm;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -8,6 +9,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import io.github.screeningloop.chat.Language;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -46,6 +48,21 @@ class GroqReplyRewriterTest {
                 .andExpect(jsonPath("$.max_completion_tokens").value(MAX_TOKENS))
                 .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));
         assertThat(rewriter.rewrite(TEMPLATE)).contains("A specialist will see you, by {{NEXT_STEP_DATE}}.");
+        server.verify();
+    }
+
+    @Test
+    void asksForTheSelectedLanguageInTheSystemPrompt() {
+        server.expect(requestTo(BASE_URL + "/chat/completions"))
+                .andExpect(jsonPath("$.messages[0].content", containsString("reassuring Spanish")))
+                .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));
+        assertThat(rewriter.rewrite(TEMPLATE, Language.ES)).isPresent();
+        server.verify();
+        server.reset();
+        server.expect(requestTo(BASE_URL + "/chat/completions"))
+                .andExpect(jsonPath("$.messages[0].content", containsString("reassuring English")))
+                .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));
+        assertThat(rewriter.rewrite(TEMPLATE)).isPresent();
         server.verify();
     }
 

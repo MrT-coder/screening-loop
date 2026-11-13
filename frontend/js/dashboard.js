@@ -1,6 +1,7 @@
 import { handleExpiredSession, requireStaff } from './auth.js';
+import { t, tp } from './i18n.js';
 import {
-  buildTable, daysOverdue, element, emptyState, plural, shortId, stageChip, stageLabel, tableRow,
+  buildTable, daysOverdue, element, emptyState, shortId, stageChip, stageLabel, tableRow,
 } from './ui.js';
 
 const CLOSED_STAGES = ['closed', 'closed-without-care'];
@@ -15,7 +16,11 @@ function caseLink(id) {
 }
 
 function formatDays(value) {
-  return value === null || value === undefined ? 'n/a' : value.toFixed(1);
+  return value === null || value === undefined ? t('kpi.notAvailable') : value.toFixed(1);
+}
+
+function ownerText(reference) {
+  return shortId(reference) || t('common.unassigned');
 }
 
 function kpiTile(label, value, hint, tone) {
@@ -29,16 +34,17 @@ function renderKpis(summary) {
   const rejected = summary.rejected.length;
   const unassigned = summary.unassigned.length;
   const tiles = [
-    kpiTile('Total cases', summary.total, 'Positive FIT results tracked'),
-    kpiTile('Open', summary.open, 'Still in the pathway'),
-    kpiTile('Overdue', overdue, overdue > 0 ? 'Past their due date' : 'Nothing past due', overdue > 0 ? 'warn' : 'ok'),
-    kpiTile('Rejected referrals', rejected, rejected > 0 ? 'Need a new referral' : 'None pending',
-      rejected > 0 ? 'danger' : 'ok'),
-    kpiTile('Unassigned', unassigned, unassigned > 0 ? 'Open cases without owner' : 'Every open case has an owner',
-      unassigned > 0 ? 'danger' : 'ok'),
-    kpiTile('Closed with evidence', summary.closed, 'Closure backed by a record'),
-    kpiTile('Closed without care', summary.closedWithoutCare, 'Recorded human decision'),
-    kpiTile('Avg days to close', formatDays(summary.averageDaysToClose), 'Closed cases only'),
+    kpiTile(t('kpi.total'), summary.total, t('kpi.total.hint')),
+    kpiTile(t('kpi.open'), summary.open, t('kpi.open.hint')),
+    kpiTile(t('kpi.overdue'), overdue,
+      overdue > 0 ? t('kpi.overdue.hintSome') : t('kpi.overdue.hintNone'), overdue > 0 ? 'warn' : 'ok'),
+    kpiTile(t('kpi.rejected'), rejected,
+      rejected > 0 ? t('kpi.rejected.hintSome') : t('kpi.rejected.hintNone'), rejected > 0 ? 'danger' : 'ok'),
+    kpiTile(t('kpi.unassigned'), unassigned,
+      unassigned > 0 ? t('kpi.unassigned.hintSome') : t('kpi.unassigned.hintNone'), unassigned > 0 ? 'danger' : 'ok'),
+    kpiTile(t('kpi.closed'), summary.closed, t('kpi.closed.hint')),
+    kpiTile(t('kpi.closedWithoutCare'), summary.closedWithoutCare, t('kpi.closedWithoutCare.hint')),
+    kpiTile(t('kpi.averageDays'), formatDays(summary.averageDaysToClose), t('kpi.averageDays.hint')),
   ];
   document.getElementById('kpis').replaceChildren(...tiles);
 }
@@ -60,7 +66,7 @@ function stageTile(stage, count, index, total, max) {
   track.append(bar);
   const share = total === 0 ? 0 : (count / total) * 100;
   tile.append(top, element('div', 'stage-name', stageLabel(stage)), track,
-    element('div', 'stage-share', `${share.toFixed(1)}% of cases`));
+    element('div', 'stage-share', t('dashboard.share', { share: share.toFixed(1) })));
   return tile;
 }
 
@@ -73,7 +79,7 @@ function renderStages(summary) {
 
 function overdueChip(dueDate) {
   const days = dueDate ? daysOverdue(dueDate) : 0;
-  return element('span', 'chip chip-warn', `${plural(days, 'day')} overdue`);
+  return element('span', 'chip chip-warn', tp('dashboard.daysOverdue', days));
 }
 
 function renderOverdue(summary) {
@@ -81,28 +87,29 @@ function renderOverdue(summary) {
     { node: caseLink(item.id), className: 'case-id' },
     { text: shortId(item.patient) },
     { node: stageChip(item.stage) },
-    { text: shortId(item.owner) || 'Unassigned' },
+    { text: ownerText(item.owner) },
     { text: item.dueDate || '-' },
     { node: overdueChip(item.dueDate) },
   ]));
   const container = document.getElementById('overdue');
-  document.getElementById('overdue-count').textContent = `${plural(summary.overdue.length, 'case')} need attention`;
+  document.getElementById('overdue-count').textContent = tp('dashboard.overdueCount', summary.overdue.length);
   container.replaceChildren(rows.length === 0
-    ? emptyState('No overdue cases', 'Every open case is within its due date.')
-    : buildTable(['Case', 'Patient', 'Stage', 'Owner', 'Due', 'Overdue by'], rows));
+    ? emptyState(t('dashboard.noOverdue.title'), t('dashboard.noOverdue.detail'))
+    : buildTable([t('table.case'), t('table.patient'), t('table.stage'), t('table.owner'), t('table.due'),
+      t('table.overdueBy')], rows));
 }
 
 function renderRejected(summary) {
   const rows = summary.rejected.map((item) => tableRow([
     { node: caseLink(item.id), className: 'case-id' },
     { text: shortId(item.patient) },
-    { text: shortId(item.owner) || 'Unassigned' },
+    { text: ownerText(item.owner) },
     { text: item.dueDate || '-' },
   ]));
-  document.getElementById('rejected-count').textContent = `${summary.rejected.length} pending`;
+  document.getElementById('rejected-count').textContent = t('dashboard.rejectedCount', { count: summary.rejected.length });
   document.getElementById('rejected').replaceChildren(rows.length === 0
-    ? emptyState('No rejected referrals', 'No referral is waiting to be requested again.')
-    : buildTable(['Case', 'Patient', 'Owner', 'Due'], rows));
+    ? emptyState(t('dashboard.noRejected.title'), t('dashboard.noRejected.detail'))
+    : buildTable([t('table.case'), t('table.patient'), t('table.owner'), t('table.due')], rows));
 }
 
 function renderOwnership(summary) {
@@ -112,10 +119,11 @@ function renderOwnership(summary) {
     { node: stageChip(item.stage) },
   ]));
   const assigned = summary.open - summary.unassigned.length;
-  document.getElementById('unassigned-count').textContent = `${summary.unassigned.length} unassigned`;
+  document.getElementById('unassigned-count').textContent =
+    t('dashboard.unassignedCount', { count: summary.unassigned.length });
   document.getElementById('unassigned').replaceChildren(rows.length === 0
-    ? emptyState('Every open case has an owner', `${plural(assigned, 'open case')} with an assigned practitioner.`)
-    : buildTable(['Case', 'Patient', 'Stage'], rows));
+    ? emptyState(t('dashboard.allOwned.title'), tp('dashboard.allOwned.detail', assigned))
+    : buildTable([t('table.case'), t('table.patient'), t('table.stage')], rows));
 }
 
 function showMessage(text) {
@@ -131,7 +139,7 @@ async function load() {
       return;
     }
     if (!response.ok) {
-      showMessage('The dashboard could not be loaded. Please reload and try again.');
+      showMessage(t('dashboard.loadError'));
       return;
     }
     const summary = await response.json();
@@ -142,7 +150,7 @@ async function load() {
     renderOwnership(summary);
     content.hidden = false;
   } catch (error) {
-    showMessage('The server is not reachable.');
+    showMessage(t('common.unreachable'));
   } finally {
     document.getElementById('footer').hidden = false;
   }

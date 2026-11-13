@@ -1,4 +1,5 @@
 import { currentUser, safeNext, signIn } from './auth.js';
+import { t } from './i18n.js';
 
 const GUEST_CREDENTIALS = { username: 'guest', password: 'guest-demo' };
 
@@ -30,9 +31,9 @@ async function attempt(username, password) {
       window.location.replace(nextPage());
       return;
     }
-    showMessage(result === 'invalid' ? 'Wrong user or password.' : 'The server had a problem. Please try again.');
+    showMessage(result === 'invalid' ? t('login.invalid') : t('login.serverError'));
   } catch (error) {
-    showMessage('The server is not reachable.');
+    showMessage(t('common.unreachable'));
   }
   setBusy(false);
 }
@@ -43,7 +44,7 @@ form.addEventListener('submit', (event) => {
   const username = String(data.get('username')).trim();
   const password = String(data.get('password'));
   if (!username || !password) {
-    showMessage('Enter your user and password.');
+    showMessage(t('login.empty'));
     form.elements[username ? 'password' : 'username'].focus();
     return;
   }

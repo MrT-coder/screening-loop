@@ -60,6 +60,11 @@ once over ssh and the plugin only runs it. Use `deploy/omv/compose.yaml` instead
 5. In the Cloudflare dashboard (Zero Trust > Networks > Tunnels > your tunnel > Public hostname), add a hostname with
    service `HTTP` and URL `<server LAN address>:<APP_PORT>`.
 
+The OMV compose file caps memory for a small host: `db` 192 MB, `fhir` 768 MB with `-Xmx512m`, `app` 384 MB with
+`-Xmx256m`. Override them with `FHIR_MEM_LIMIT`, `FHIR_JAVA_OPTS`, `APP_MEM_LIMIT` and `APP_JAVA_OPTS` in the plugin's
+environment field. On a weak server, build the image on another machine and ship it with
+`docker save screening-loop-app:local | gzip | ssh <server> "gunzip | sudo docker load"` instead of building there.
+
 OMV's own interface uses ports 80 and 443, so keep a different `APP_PORT`. Because the tunnel reaches the application
 through the LAN address, the port is published on the host and not only on the loopback. Anyone on the local network
 can then reach it directly, and could send a forged `CF-Connecting-IP` header to dodge the attempt limit. Keep the
