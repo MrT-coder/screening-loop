@@ -45,6 +45,26 @@ Check `http://127.0.0.1:8082/actuator/health` on the server. The first start bui
 In the Cloudflare Tunnel, add a public hostname that points to `http://localhost:8082` (or to the server address if the
 tunnel runs in a container). Cloudflare terminates TLS.
 
+## OpenMediaVault (Compose plugin)
+
+On OMV 7 the Compose plugin (Services > Compose > Files) does not build from a repository folder, so the image is built
+once over ssh and the plugin only runs it. Use `deploy/omv/compose.yaml` instead of `docker-compose.prod.yml`.
+
+1. Over ssh, clone the repository, for example into `/srv/dev-disk-by-uuid-<id>/appdata/screening-loop/repo`, and build
+   the image: `sudo docker build -t screening-loop-app:local <repo folder>` (a few minutes the first time).
+2. Create the data folder: `mkdir -p /srv/dev-disk-by-uuid-<id>/appdata/screening-loop/postgres`.
+3. In the plugin, create a file from `deploy/omv/compose.yaml`. Put the variables in its environment field:
+   `DATA_DIR` (the `appdata/screening-loop` folder), `REPO_DIR` (the clone), `APP_PORT` (a free port, default 8096),
+   and the secrets from section 1. Generate them on the server, for example `openssl rand -base64 24`.
+4. Restore the data (section 2) before the first start of the `fhir` service: start `db` only, restore, then start all.
+5. In the Cloudflare dashboard (Zero Trust > Networks > Tunnels > your tunnel > Public hostname), add a hostname with
+   service `HTTP` and URL `<server LAN address>:<APP_PORT>`.
+
+OMV's own interface uses ports 80 and 443, so keep a different `APP_PORT`. Because the tunnel reaches the application
+through the LAN address, the port is published on the host and not only on the loopback. Anyone on the local network
+can then reach it directly, and could send a forged `CF-Connecting-IP` header to dodge the attempt limit. Keep the
+port closed to untrusted networks.
+
 ## What the `prod` profile changes
 
 - The session cookie is `Secure`.

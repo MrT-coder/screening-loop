@@ -1,0 +1,48 @@
+name: screening-loop
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hapi
+      POSTGRES_USER: hapi
+      POSTGRES_PASSWORD: ${HAPI_DB_PASSWORD:?set HAPI_DB_PASSWORD}
+    volumes:
+      - ${DATA_DIR:?set DATA_DIR}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hapi -d hapi"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  fhir:
+    image: hapiproject/hapi:v8.12.0-2
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hapi
+      SPRING_DATASOURCE_USERNAME: hapi
+      SPRING_DATASOURCE_PASSWORD: ${HAPI_DB_PASSWORD:?set HAPI_DB_PASSWORD}
+    volumes:
+      - ${REPO_DIR:?set REPO_DIR}/infra/hapi/application.yaml:/app/config/application.yaml:ro
+
+  app:
+    image: screening-loop-app:local
+    restart: unless-stopped
+    depends_on:
+      - fhir
+    environment:
+      COORDINATOR_PASSWORD: ${COORDINATOR_PASSWORD:?set COORDINATOR_PASSWORD}
+      GP1_PASSWORD: ${GP1_PASSWORD:?set GP1_PASSWORD}
+      GP2_PASSWORD: ${GP2_PASSWORD:?set GP2_PASSWORD}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    ports:
+      - "${APP_PORT:-8096}:8082"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
