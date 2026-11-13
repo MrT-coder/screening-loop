@@ -37,11 +37,13 @@ closes a case on its own.
 - The **civil registry is a mock** backed by the synthetic `us-ssn` identifier that Synthea generates. It stands in for
   a real civil registry.
 - The attempt limiter and liveness tokens live **in memory**: they reset on restart and work for a single instance.
-- Behind a Cloudflare Tunnel the server sees the tunnel address, not the user's. The per-address lock would then be
-  shared by everyone, so 5 failures from anyone could lock all users out. This must be solved before a public
-  deployment (read the real address from the tunnel header, only when the request comes from the tunnel).
-- Staff accounts are demo accounts with demo passwords from configuration. The guest credentials are public by design
-  (read only). Replace the staff passwords before exposing the prototype.
+- Behind a Cloudflare Tunnel the server would see the tunnel address for every visitor. The `prod` profile reads the
+  real address from the `CF-Connecting-IP` header, accepted only from private addresses, and the application is
+  published only on the host loopback (see [deployment](deployment.md)). The lock is still per address: people who
+  share one public address (an office, a mobile carrier) share its attempts.
+- Staff accounts are demo accounts. Their passwords come from the environment (`COORDINATOR_PASSWORD`,
+  `GP1_PASSWORD`, `GP2_PASSWORD`) and must be replaced on a public server. The guest credentials are public by design
+  (read only).
 - A real deployment would use an identity provider and SSO for staff, not an in-memory user list.
 
 ## Patient chat and the LLM

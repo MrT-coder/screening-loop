@@ -1,0 +1,9 @@
+.git
+.qa
+.claude
+.playwright-cli
+submission
+backend/target
+CONTEXT.md
+challenges-*.md
+*.pptx

@@ -1,0 +1,14 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+  tomcat:
+    remoteip:
+      remote-ip-header: CF-Connecting-IP
+      protocol-header: X-Forwarded-Proto
+      protocol-header-https-value: https
+
+fhir:
+  server:
+    url: ${FHIR_SERVER_URL:http://fhir:8080/fhir}

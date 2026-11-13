@@ -23,15 +23,15 @@ screening:
     model: llama-3.1-8b-instant
   users:
     - username: coordinator
-      password: coordinator-demo
+      password: ${COORDINATOR_PASSWORD:coordinator-demo}
       practitioner: Practitioner/demo-coordinator
       role: COORDINATOR
     - username: gp1
-      password: gp1-demo
+      password: ${GP1_PASSWORD:gp1-demo}
       practitioner: Practitioner/demo-gp-1
       role: CLINICIAN
     - username: gp2
-      password: gp2-demo
+      password: ${GP2_PASSWORD:gp2-demo}
       practitioner: Practitioner/demo-gp-2
       role: CLINICIAN
     - username: guest
