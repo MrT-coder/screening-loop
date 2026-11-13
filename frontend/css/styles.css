@@ -481,3 +481,21 @@ td.case-id {
     grid-template-columns: 1fr;
   }
 }
+
+.staff-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.staff-nav a {
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.staff-nav a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
