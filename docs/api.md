@@ -49,6 +49,7 @@ A client cannot choose or forge it.
 | `GET /api/cases/{id}` | One case, its history (one `Provenance` per transition) and `allowedTargets`, the stages it can move to |
 | `POST /api/cases` | Open a case (`patient`, `fitResult`, `owner`, `dueDate`) |
 | `POST /api/cases/{id}/transitions` | Move a case: `target`, `owner`, `dueDate`, `evidence`, `reason` |
+| `POST /api/patients/{id}/chat` | Read-only staff chat: `{ "text" }` returns `{ "reply", "intent" }` from the patient's recorded data (summary, FIT results, conditions, medications, procedures, cases). Fixed rules, no LLM. Requests to change data or for clinical advice get a fixed refusal that points to the ticket form |
 | `GET /api/patients/{id}/summary` | Demographics, FIT results, conditions, active medications, recent procedures, cases |
 
 Every transition writes a `Provenance` in the same FHIR transaction as the `Task` update. Every read of cases,
