@@ -15,19 +15,13 @@
         <p class="subtitle">Colorectal screening: positive FIT to documented closure</p>
       </div>
     </div>
-    <div class="session">
-      <form id="login-form" class="actor" hidden>
-        <label for="username">User</label>
-        <input id="username" name="username" type="text" autocomplete="username" spellcheck="false" required>
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required>
-        <button type="submit">Sign in</button>
-        <button type="button" id="guest-button" class="secondary">Continue as guest</button>
-      </form>
-      <div id="user-info" class="actor" hidden>
-        <span id="user-label"></span>
-        <button type="button" id="logout-button" class="secondary">Sign out</button>
-      </div>
+    <nav class="staff-nav" aria-label="Staff">
+      <a href="/" aria-current="page">Dashboard</a>
+      <a href="cases.html">Cases</a>
+    </nav>
+    <div class="session actor">
+      <span id="user-label"></span>
+      <button type="button" id="logout-button" class="secondary">Sign out</button>
     </div>
   </header>
 

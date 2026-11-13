@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screening Loop Sign in</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <main class="login">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">SL</span>
+      <div>
+        <h1>Screening Loop <span class="chip chip-neutral">Prototype</span></h1>
+        <p class="subtitle">Staff access</p>
+      </div>
+    </div>
+
+    <section class="card" aria-labelledby="login-title">
+      <h2 id="login-title">Sign in</h2>
+      <p class="lead">Use your staff account, or explore the prototype in read-only mode.</p>
+      <p id="message" class="message" role="alert" hidden></p>
+      <form id="login-form" novalidate>
+        <label for="username">User</label>
+        <input id="username" name="username" type="text" autocomplete="username" spellcheck="false" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button type="submit" class="wide">Sign in</button>
+      </form>
+      <div class="divider"><span>or</span></div>
+      <button type="button" id="guest-button" class="secondary wide">Continue as guest (read only)</button>
+    </section>
+
+    <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool.</p>
+    <p class="footer"><a href="patient.html">I am a patient</a></p>
+  </main>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

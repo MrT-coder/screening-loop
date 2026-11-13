@@ -4,8 +4,8 @@ Closing the loop between an actionable screening result and completed care.
 
 A prototype for the Future Health Digital Innovation Challenge (Challenge 05). Every actionable result becomes a FHIR `Task` with a clear owner, a due date, an audit trail and a documented closure.
 
-> **Status:** the backend is complete and the dashboard page works. The patient chat page and the clinician web are
-> still to build. All data is synthetic. This is not a medical device and makes no clinical claims.
+> **Status:** the backend is complete. The staff login, dashboard, case workspace and patient chat pages work.
+> A read-only clinician chat is still to build. All data is synthetic. This is not a medical device and makes no clinical claims.
 > See [assumptions and limitations](docs/assumptions-and-limitations.md).
 
 ## Idea in one minute
@@ -49,7 +49,7 @@ Optional LLM (off by default): set `GROQ_API_KEY` and `SCREENING_LLM_ENABLED=tru
 
 ```
 backend/    API and case state machine (Spring Boot, HAPI FHIR)
-frontend/   Dashboard page today; patient chat and clinician web to come (plain HTML, CSS, JavaScript)
+frontend/   Login, dashboard, case workspace and patient chat (plain HTML, CSS, JavaScript)
 docs/       API, case model, assumptions and limitations, data sources and licences
 infra/      HAPI configuration for Docker Compose
 ```

@@ -1,0 +1,147 @@
+.staff-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.staff-nav a {
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.staff-nav a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.workspace {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 16px;
+}
+
+@media (min-width: 960px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filter {
+  min-height: 40px;
+  background: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+}
+
+.filter.is-active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.case-link {
+  color: var(--primary);
+  font-weight: 650;
+}
+
+tr.is-selected td {
+  background: var(--surface-high);
+}
+
+.panel h3 {
+  margin: 18px 0 8px;
+  font-size: 0.95rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.summary {
+  display: grid;
+  gap: 10px;
+}
+
+.summary h4 {
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summary ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.timeline {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline li {
+  padding: 8px 12px;
+  border-left: 3px solid var(--primary);
+  background: var(--surface-low);
+  border-radius: 0 8px 8px 0;
+}
+
+.timeline .when {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.ticket label {
+  display: block;
+  margin: 12px 0 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ticket input,
+.ticket select {
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+}
+
+.ticket .wide {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+}
+
+.small {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}

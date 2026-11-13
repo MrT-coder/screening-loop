@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screening Loop Cases</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/cases.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">SL</span>
+      <div>
+        <h1>Screening Loop <span class="chip chip-neutral">Prototype</span></h1>
+        <p class="subtitle">Colorectal screening: positive FIT to documented closure</p>
+      </div>
+    </div>
+    <nav class="staff-nav" aria-label="Staff">
+      <a href="/">Dashboard</a>
+      <a href="cases.html" aria-current="page">Cases</a>
+    </nav>
+    <div class="session actor">
+      <span id="user-label"></span>
+      <button type="button" id="logout-button" class="secondary">Sign out</button>
+    </div>
+  </header>
+
+  <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool and not validated for care.</p>
+  <p id="message" class="message" role="status" hidden></p>
+
+  <main id="content" class="workspace" hidden>
+    <section class="panel" aria-labelledby="list-title">
+      <div class="panel-head">
+        <h2 id="list-title">Open cases</h2>
+        <span id="list-count" class="chip chip-neutral"></span>
+      </div>
+      <div class="filters" role="group" aria-label="Filter cases">
+        <button type="button" class="filter is-active" data-filter="all">All</button>
+        <button type="button" class="filter" data-filter="mine">Mine</button>
+        <button type="button" class="filter" data-filter="overdue">Overdue</button>
+      </div>
+      <div id="case-list"></div>
+    </section>
+
+    <section id="detail" class="panel" aria-labelledby="detail-title" hidden>
+      <div class="panel-head">
+        <h2 id="detail-title">Case</h2>
+        <span id="detail-stage"></span>
+      </div>
+      <dl id="detail-facts" class="facts"></dl>
+
+      <h3>Patient summary</h3>
+      <div id="patient-summary" class="summary"></div>
+
+      <h3>History</h3>
+      <ol id="history" class="timeline"></ol>
+
+      <h3>Advance or escalate</h3>
+      <p id="form-note" class="small" hidden></p>
+      <form id="transition-form" class="ticket" novalidate hidden>
+        <label for="target">Move to</label>
+        <select id="target" name="target" required></select>
+
+        <label for="owner">Owner</label>
+        <input id="owner" name="owner" type="text" list="practitioners" autocomplete="off" spellcheck="false" required>
+        <datalist id="practitioners">
+          <option value="Practitioner/demo-coordinator"></option>
+          <option value="Practitioner/demo-gp-1"></option>
+          <option value="Practitioner/demo-gp-2"></option>
+          <option value="Practitioner/demo-specialist-1"></option>
+        </datalist>
+
+        <div id="due-field">
+          <label for="due-date">Due date</label>
+          <input id="due-date" name="dueDate" type="date">
+        </div>
+
+        <div id="evidence-field" hidden>
+          <label for="evidence">Evidence (FHIR references, comma separated)</label>
+          <input id="evidence" name="evidence" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="Procedure/abc, DiagnosticReport/def">
+        </div>
+
+        <div id="reason-field" hidden>
+          <label for="reason">Closure reason</label>
+          <select id="reason" name="reason"></select>
+          <p class="small">Closing without care is a human decision. It is recorded under your account.</p>
+        </div>
+
+        <p id="form-error" class="message" role="alert" hidden></p>
+        <button type="submit" class="wide">Save transition</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</footer>
+
+  <script type="module" src="js/cases.js"></script>
+</body>
+</html>

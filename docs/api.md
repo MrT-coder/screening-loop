@@ -46,7 +46,7 @@ A client cannot choose or forge it.
 | `POST /api/login`, `POST /api/logout`, `GET /api/me` | Session |
 | `GET /api/dashboard` | Totals, cases by stage, overdue, rejected and unassigned cases, average days to close, drop-off reasons, referral acceptance rate |
 | `GET /api/cases` | Open cases |
-| `GET /api/cases/{id}` | One case plus its history (one `Provenance` per transition) |
+| `GET /api/cases/{id}` | One case, its history (one `Provenance` per transition) and `allowedTargets`, the stages it can move to |
 | `POST /api/cases` | Open a case (`patient`, `fitResult`, `owner`, `dueDate`) |
 | `POST /api/cases/{id}/transitions` | Move a case: `target`, `owner`, `dueDate`, `evidence`, `reason` |
 | `GET /api/patients/{id}/summary` | Demographics, FIT results, conditions, active medications, recent procedures, cases |

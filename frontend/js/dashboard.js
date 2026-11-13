@@ -1,57 +1,21 @@
-import { csrfToken } from './http.js';
+import { requireStaff } from './auth.js';
+import {
+  buildTable, daysOverdue, element, emptyState, plural, stageChip, stageLabel, tableRow,
+} from './ui.js';
 
-const GUEST_CREDENTIALS = { username: 'guest', password: 'guest-demo' };
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const CLOSED_STAGES = ['closed', 'closed-without-care'];
 
-const STAGE_LABELS = {
-  'result-issued': 'Result issued',
-  'patient-notified': 'Patient notified',
-  'acknowledged': 'Acknowledged',
-  'confirmation-done': 'Confirmation done',
-  'referral-requested': 'Referral requested',
-  'referral-rejected': 'Referral rejected',
-  'referral-accepted': 'Referral accepted',
-  'appointment-booked': 'Appointment booked',
-  'treatment-or-surveillance': 'Treatment or surveillance',
-  'closed': 'Closed with evidence',
-  'closed-without-care': 'Closed without care',
-};
-
-const loginForm = document.getElementById('login-form');
-const userInfo = document.getElementById('user-info');
-const userLabel = document.getElementById('user-label');
 const message = document.getElementById('message');
 const content = document.getElementById('content');
 
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) {
-    node.className = className;
-  }
-  if (text !== undefined) {
-    node.textContent = text;
-  }
-  return node;
-}
-
-function stageLabel(stage) {
-  return STAGE_LABELS[stage] || stage;
+function caseLink(id) {
+  const link = element('a', 'case-link', id);
+  link.href = `cases.html?case=${encodeURIComponent(id)}`;
+  return link;
 }
 
 function formatDays(value) {
   return value === null || value === undefined ? 'n/a' : value.toFixed(1);
-}
-
-function daysOverdue(dueDate) {
-  const due = new Date(`${dueDate}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.max(0, Math.round((today - due) / MS_PER_DAY));
-}
-
-function plural(count, singular) {
-  return `${count} ${singular}${count === 1 ? '' : 's'}`;
 }
 
 function kpiTile(label, value, hint, tone) {
@@ -107,44 +71,14 @@ function renderStages(summary) {
     ...counts.map(([stage, count], index) => stageTile(stage, count, index, summary.total, max)));
 }
 
-function stageChip(stage) {
-  return element('span', 'chip chip-stage', stageLabel(stage));
-}
-
 function overdueChip(dueDate) {
   const days = dueDate ? daysOverdue(dueDate) : 0;
   return element('span', 'chip chip-warn', `${plural(days, 'day')} overdue`);
 }
 
-function tableRow(cells) {
-  const row = element('tr');
-  cells.forEach((cell) => {
-    const td = element('td', cell.className);
-    td.append(cell.node || document.createTextNode(cell.text));
-    row.append(td);
-  });
-  return row;
-}
-
-function buildTable(headings, rows) {
-  const table = element('table');
-  const head = element('tr');
-  headings.forEach((title) => head.append(element('th', '', title)));
-  table.append(head, ...rows);
-  const wrapper = element('div', 'table-wrap');
-  wrapper.append(table);
-  return wrapper;
-}
-
-function emptyState(title, detail) {
-  const box = element('div', 'empty');
-  box.append(element('strong', '', title), element('span', '', detail));
-  return box;
-}
-
 function renderOverdue(summary) {
   const rows = summary.overdue.map((item) => tableRow([
-    { text: item.id, className: 'case-id' },
+    { node: caseLink(item.id), className: 'case-id' },
     { text: item.patient },
     { node: stageChip(item.stage) },
     { text: item.owner || 'Unassigned' },
@@ -160,7 +94,7 @@ function renderOverdue(summary) {
 
 function renderRejected(summary) {
   const rows = summary.rejected.map((item) => tableRow([
-    { text: item.id, className: 'case-id' },
+    { node: caseLink(item.id), className: 'case-id' },
     { text: item.patient },
     { text: item.owner || 'Unassigned' },
     { text: item.dueDate || '-' },
@@ -173,7 +107,7 @@ function renderRejected(summary) {
 
 function renderOwnership(summary) {
   const rows = summary.unassigned.map((item) => tableRow([
-    { text: item.id, className: 'case-id' },
+    { node: caseLink(item.id), className: 'case-id' },
     { text: item.patient },
     { node: stageChip(item.stage) },
   ]));
@@ -190,26 +124,9 @@ function showMessage(text) {
   content.hidden = true;
 }
 
-function showSignedOut(text) {
-  loginForm.hidden = false;
-  userInfo.hidden = true;
-  showMessage(text);
-}
-
-function showSignedIn(me) {
-  loginForm.hidden = true;
-  userInfo.hidden = false;
-  userLabel.textContent = `Signed in as ${me.username} (${me.role.toLowerCase()})`;
-}
-
 async function load() {
-  message.hidden = true;
   try {
     const response = await fetch('/api/dashboard');
-    if (response.status === 401) {
-      showSignedOut('Sign in to see the dashboard, or continue as guest for a read-only view.');
-      return;
-    }
     if (!response.ok) {
       showMessage(`The dashboard could not be loaded (HTTP ${response.status}).`);
       return;
@@ -227,47 +144,9 @@ async function load() {
 }
 
 async function start() {
-  try {
-    const response = await fetch('/api/me');
-    if (response.ok) {
-      showSignedIn(await response.json());
-      await load();
-      return;
-    }
-    showSignedOut('Sign in to see the dashboard, or continue as guest for a read-only view.');
-  } catch (error) {
-    showMessage('The server is not reachable.');
+  if (await requireStaff()) {
+    await load();
   }
 }
-
-async function signIn(username, password) {
-  const response = await fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': csrfToken() },
-    body: new URLSearchParams({ username, password }),
-  });
-  if (!response.ok) {
-    showSignedOut('Wrong user or password.');
-    return;
-  }
-  await start();
-}
-
-async function signOut() {
-  await fetch('/api/logout', { method: 'POST', headers: { 'X-XSRF-TOKEN': csrfToken() } });
-  await start();
-}
-
-loginForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const data = new FormData(loginForm);
-  signIn(data.get('username'), data.get('password'));
-});
-
-document.getElementById('guest-button').addEventListener('click', () => {
-  signIn(GUEST_CREDENTIALS.username, GUEST_CREDENTIALS.password);
-});
-
-document.getElementById('logout-button').addEventListener('click', signOut);
 
 start();

@@ -60,6 +60,12 @@ class CaseDetailTest {
     }
 
     @Test
+    void listsTheStagesTheCaseCanMoveTo() {
+        assertThat(CaseDetail.from(task(), List.of()).allowedTargets())
+                .containsExactlyInAnyOrder("patient-notified", "closed-without-care");
+    }
+
+    @Test
     void returnsAnEmptyHistoryWhenTheCaseWasNeverAdvanced() {
         assertThat(CaseDetail.from(task(), List.of()).history()).isEmpty();
     }
