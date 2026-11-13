@@ -2,6 +2,7 @@ import { postJson } from './http.js';
 
 const SCAN_MS = 4000;
 const TICK_MS = 100;
+const FAILURE_TEXT = 'Something went wrong. Please try again.';
 
 const DEMO_PATIENTS = [
   { label: 'Result issued, follow-up overdue', document: '999-38-6612', birthDate: '1976-10-05' },
@@ -163,18 +164,22 @@ async function ask(text, isVisible) {
   if (isVisible) {
     addBubble(text, 'me');
   }
-  const response = await postJson('/api/chat/messages', { text });
-  if (response.status === 401 || response.status === 403) {
-    showMessage('Your session ended. Please check your details again.');
-    showStep('details');
-    return;
+  try {
+    const response = await postJson('/api/chat/messages', { text });
+    if (response.status === 401 || response.status === 403) {
+      showMessage('Your session ended. Please check your details again.');
+      showStep('details');
+      return;
+    }
+    if (!response.ok) {
+      addBubble(FAILURE_TEXT, 'bot');
+      return;
+    }
+    const reply = await response.json();
+    addBubble(reply.reply, 'bot');
+  } catch (error) {
+    addBubble(FAILURE_TEXT, 'bot');
   }
-  if (!response.ok) {
-    addBubble('Something went wrong. Please try again.', 'bot');
-    return;
-  }
-  const reply = await response.json();
-  addBubble(reply.reply, 'bot');
 }
 
 async function enterChat() {
