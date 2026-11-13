@@ -46,6 +46,9 @@ closures) are simulated by this code. Nothing here is clinically validated and i
 - Dashboard: overdue, rejected and unassigned cases, cases by stage, closure reasons, referral acceptance rate.
 - Patient summary for clinicians, and a closed-domain patient chat with identity check (simulated registry and
   liveness) and reassuring template replies. An optional Groq rewriter exists and is **off by default**.
+- English and Spanish across the whole interface (patient chat, case workspace, dashboard, login). A language switch
+  sits on every page and the choice is remembered in the browser. Replies come from fixed templates in both languages;
+  the optional rewriter receives the selected language.
 - 33 simulated demo cases on top of the Synthea patients with a positive FIT.
 
 ## Run it locally

@@ -517,3 +517,27 @@ td.case-id {
   font-weight: 650;
 }
 
+
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.lang-switch button {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 650;
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Screening Loop Dashboard</title>
+  <title data-i18n="title.dashboard">Screening Loop Dashboard</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -12,40 +12,41 @@
     <div class="brand">
       <span class="logo" aria-hidden="true">SL</span>
       <div>
-        <h1>Screening Loop <span class="chip chip-neutral">Prototype</span></h1>
-        <p class="subtitle">Colorectal screening: positive FIT to documented closure</p>
+        <h1>Screening Loop <span class="chip chip-neutral" data-i18n="brand.prototype">Prototype</span></h1>
+        <p class="subtitle" data-i18n="brand.subtitle.pathway">Colorectal screening: positive FIT to documented closure</p>
       </div>
     </div>
-    <nav class="staff-nav" aria-label="Staff">
-      <a href="/" aria-current="page">Dashboard</a>
-      <a href="cases.html">Cases</a>
+    <nav class="staff-nav" aria-label="Staff" data-i18n-attr="aria-label:nav.label">
+      <a href="/" aria-current="page" data-i18n="nav.dashboard">Dashboard</a>
+      <a href="cases.html" data-i18n="nav.cases">Cases</a>
     </nav>
+    <div data-lang-switch></div>
     <div class="session actor">
       <span id="user-label"></span>
-      <button type="button" id="logout-button" class="secondary">Sign out</button>
+      <button type="button" id="logout-button" class="secondary" data-i18n="session.signOut">Sign out</button>
     </div>
   </header>
 
-  <p class="notice"><strong>Synthetic data only.</strong> Prototype for demonstration, not a clinical tool and not validated for care.</p>
+  <p class="notice"><strong data-i18n="notice.syntheticStrong">Synthetic data only.</strong> <span data-i18n="notice.prototypeLong">Prototype for demonstration, not a clinical tool and not validated for care.</span></p>
   <p id="message" class="message" role="status" hidden></p>
 
   <main id="content" hidden>
     <div class="page-head">
-      <h2 class="page-title">Screening pathway overview</h2>
-      <p class="page-subtitle">Every positive FIT result, from issuance to documented closure.</p>
+      <h2 class="page-title" data-i18n="dashboard.title">Screening pathway overview</h2>
+      <p class="page-subtitle" data-i18n="dashboard.subtitle">Every positive FIT result, from issuance to documented closure.</p>
     </div>
 
     <section aria-labelledby="kpi-title">
-      <h2 id="kpi-title" class="visually-hidden">Key figures</h2>
+      <h2 id="kpi-title" class="visually-hidden" data-i18n="dashboard.kpiHeading">Key figures</h2>
       <div id="kpis" class="kpis"></div>
     </section>
 
     <section aria-labelledby="stage-title" class="panel">
       <div class="panel-head">
-        <h2 id="stage-title">Cases by lifecycle stage</h2>
+        <h2 id="stage-title" data-i18n="dashboard.stageHeading">Cases by lifecycle stage</h2>
         <p class="legend">
-          <span class="legend-item"><span class="swatch swatch-open"></span>Open stages</span>
-          <span class="legend-item"><span class="swatch swatch-closed"></span>Closed outcomes</span>
+          <span class="legend-item"><span class="swatch swatch-open"></span><span data-i18n="dashboard.legendOpen">Open stages</span></span>
+          <span class="legend-item"><span class="swatch swatch-closed"></span><span data-i18n="dashboard.legendClosed">Closed outcomes</span></span>
         </p>
       </div>
       <div id="stages" class="stages"></div>
@@ -53,7 +54,7 @@
 
     <section aria-labelledby="overdue-title" class="panel">
       <div class="panel-head">
-        <h2 id="overdue-title">Overdue cases</h2>
+        <h2 id="overdue-title" data-i18n="dashboard.overdueHeading">Overdue cases</h2>
         <span id="overdue-count" class="chip chip-warn"></span>
       </div>
       <div id="overdue"></div>
@@ -62,7 +63,7 @@
     <div class="split">
       <section aria-labelledby="rejected-title" class="panel">
         <div class="panel-head">
-          <h2 id="rejected-title">Rejected referrals</h2>
+          <h2 id="rejected-title" data-i18n="dashboard.rejectedHeading">Rejected referrals</h2>
           <span id="rejected-count" class="chip chip-danger"></span>
         </div>
         <div id="rejected"></div>
@@ -70,7 +71,7 @@
 
       <section aria-labelledby="unassigned-title" class="panel">
         <div class="panel-head">
-          <h2 id="unassigned-title">Ownership</h2>
+          <h2 id="unassigned-title" data-i18n="dashboard.ownershipHeading">Ownership</h2>
           <span id="unassigned-count" class="chip chip-ok"></span>
         </div>
         <div id="unassigned"></div>
@@ -78,7 +79,7 @@
     </div>
   </main>
 
-  <footer class="footer" id="footer" hidden>Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4. <a href="/patient.html">Patient chat</a></footer>
+  <footer class="footer" id="footer" hidden><span data-i18n="footer.synthetic">Synthetic data generated with Synthea. Care-coordination events are simulated. FHIR R4.</span> <a href="/patient.html" data-i18n="footer.patientChat">Patient chat</a></footer>
 
   <script type="module" src="js/dashboard.js"></script>
 </body>

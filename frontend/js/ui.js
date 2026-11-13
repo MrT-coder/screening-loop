@@ -1,26 +1,8 @@
+import { t } from './i18n.js';
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-export const STAGE_LABELS = {
-  'result-issued': 'Result issued',
-  'patient-notified': 'Patient notified',
-  'acknowledged': 'Acknowledged',
-  'confirmation-done': 'Confirmation done',
-  'referral-requested': 'Referral requested',
-  'referral-rejected': 'Referral rejected',
-  'referral-accepted': 'Referral accepted',
-  'appointment-booked': 'Appointment booked',
-  'treatment-or-surveillance': 'Treatment or surveillance',
-  'closed': 'Closed with evidence',
-  'closed-without-care': 'Closed without care',
-};
-
-export const CLOSURE_REASONS = {
-  'patient-declined': 'Patient declined',
-  'unreachable': 'Patient unreachable',
-  'relocated': 'Patient relocated',
-  'care-elsewhere': 'Receiving care elsewhere',
-  'other': 'Other',
-};
+export const CLOSURE_REASON_CODES = ['patient-declined', 'unreachable', 'relocated', 'care-elsewhere', 'other'];
 
 export function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -34,11 +16,13 @@ export function element(tag, className, text) {
 }
 
 export function stageLabel(stage) {
-  return STAGE_LABELS[stage] || stage;
+  const key = `stage.${stage}`;
+  const label = t(key);
+  return label === key ? stage : label;
 }
 
-export function plural(count, singular) {
-  return `${count} ${singular}${count === 1 ? '' : 's'}`;
+export function closureReasonLabel(code) {
+  return t(`reason.${code}`);
 }
 
 export function daysOverdue(dueDate) {
