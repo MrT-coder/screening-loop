@@ -7,6 +7,6 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 public record LlmProperties(
         @DefaultValue("false") boolean enabled,
         String apiKey,
-        @DefaultValue("llama-3.1-8b-instant") String model,
+        @DefaultValue("openai/gpt-oss-20b") String model,
         @DefaultValue("https://api.groq.com/openai/v1") String baseUrl) {
 }

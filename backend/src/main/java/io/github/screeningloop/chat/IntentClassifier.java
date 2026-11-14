@@ -10,7 +10,7 @@ public class IntentClassifier {
                     "what should", "can i take", "stop taking", "diagnos", "prognos", "symptom", "sintoma",
                     "treatment", "tratamiento", "surger", "pain", "dolor", "debo", "deberia", "morir", "die ")),
             new Rule(Intent.MEDICATIONS, List.of(
-                    "medic", "prescription", "pill", "drug", "receta")),
+                    "medicat", "medicac", "medicin", "medicament", "prescription", "pill", "drug", "receta")),
             new Rule(Intent.LATEST_EXAMS, List.of(
                     "exam", "test", "lab ", "labs ", "result", "procedure", "colonoscop", "fit ", "analisis",
                     "prueba")),

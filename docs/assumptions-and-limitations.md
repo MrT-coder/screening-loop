@@ -51,13 +51,20 @@ closes a case on its own.
 - The chat is a **closed domain**: no RAG, no internet, no medical advice. Intent detection is rule based, so a
   question phrased in an unusual way can fall into the fixed refusal. Replies are in English; a few Spanish keywords
   are recognised.
+- Procedure and condition names come straight from the Synthea bundles (SNOMED CT display text, in English). They are
+  shown unchanged in Spanish replies, so a Spanish answer can list English terms. We do not translate them: SNOMED CT
+  is out of scope for licensing and a hand-made clinical translation would be unverified. Path to production: a
+  licensed terminology with Spanish descriptions.
 - The LLM is **optional and off by default**. When enabled it only receives a reply template with opaque placeholders
   (for example `{{NEXT_STEP_DATE}}`) and no patient data. The backend validates the rewrite (same placeholders, no
   digits, no links, no new facts, reassurance sentence kept) and falls back to the fixed template otherwise. The
   backend substitutes the real values. Permissions are never decided by the model.
 - The validator cannot detect a subtle piece of medical advice written without digits. That residual risk is the main
   reason the LLM stays off by default.
-- The Groq integration follows Groq's public documentation but was **not tested against the real service**.
+- The Groq integration was tested against the real service on 2026-11-13 with `openai/gpt-oss-20b` (Groq shut down the
+  earlier `llama-3.1-8b-instant` on 2026-08-16). The model reasons before answering, so we send `reasoning_effort` low
+  and a 1024 token cap, and every call logs its token usage. If the service fails or returns nothing, the fixed
+  template is used.
 
 ## Standards and terminology
 

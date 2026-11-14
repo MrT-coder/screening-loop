@@ -51,13 +51,13 @@ their licences, produced on 2026-11-12 with `org.codehaus.mojo:license-maven-plu
 
 Test-only libraries (JUnit 5, Mockito, AssertJ and the Spring test modules) are not shipped. Regenerate the list after
 any dependency change. The remaining **to verify** items are the container images (HAPI JPA server, PostgreSQL), the
-Checkstyle build plugin and the Meta Llama licence for the optional Groq model.
+Checkstyle build plugin and the licence of the optional Groq model.
 
 ## Services (optional)
 
 | Service | Use | Notes |
 |---------|-----|-------|
-| Groq API (`https://api.groq.com/openai/v1`) | Optional rewriting of reply templates. **Off by default** | Receives only templates with opaque placeholders, never patient data. Subject to Groq's terms. Model `llama-3.1-8b-instant` (Meta Llama licence applies; to verify). Not used unless an API key is configured and the switch is turned on |
+| Groq API (`https://api.groq.com/openai/v1`) | Optional rewriting of reply templates. **Off by default** | Receives only templates with opaque placeholders, never patient data. Subject to Groq's terms. Model `openai/gpt-oss-20b` (replaces `llama-3.1-8b-instant`, which Groq shut down on 2026-08-16; model licence to verify). Not used unless an API key is configured and the switch is turned on |
 | Google Stitch | Used once to draft the dashboard layout and palette | AI-generated design reference; we re-implemented the page by hand and removed content it invented |
 | Cloudflare Tunnel | Planned public URL for the demo | Not set up yet |
 
