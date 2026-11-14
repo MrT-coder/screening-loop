@@ -11,6 +11,9 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import io.github.screeningloop.chat.Language;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,16 +21,17 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseCreator;
 import org.springframework.web.client.RestClient;
 
+@ExtendWith(OutputCaptureExtension.class)
 class GroqReplyRewriterTest {
 
     private static final String BASE_URL = "https://api.groq.com/openai/v1";
-    private static final int MAX_TOKENS = 300;
-    private static final String MODEL = "llama-3.1-8b-instant";
+    private static final int MAX_TOKENS = 1024;
+    private static final String MODEL = "openai/gpt-oss-20b";
     private static final String TEMPLATE = "Your referral was requested. Expected by {{NEXT_STEP_DATE}}.";
     private static final String RESPONSE = """
             {"id":"x","object":"chat.completion","choices":[{"index":0,"finish_reason":"stop",
             "message":{"role":"assistant","content":"  A specialist will see you, by {{NEXT_STEP_DATE}}.  "}}],
-            "usage":{"total_tokens":10}}
+            "usage":{"prompt_tokens":7,"completion_tokens":3,"total_tokens":10}}
             """;
 
     private final RestClient.Builder builder = RestClient.builder()
@@ -46,8 +50,28 @@ class GroqReplyRewriterTest {
                 .andExpect(jsonPath("$.messages[1].role").value("user"))
                 .andExpect(jsonPath("$.messages[1].content").value(TEMPLATE))
                 .andExpect(jsonPath("$.max_completion_tokens").value(MAX_TOKENS))
+                .andExpect(jsonPath("$.reasoning_effort").value("low"))
+                .andExpect(jsonPath("$.include_reasoning").value(false))
                 .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));
         assertThat(rewriter.rewrite(TEMPLATE)).contains("A specialist will see you, by {{NEXT_STEP_DATE}}.");
+        server.verify();
+    }
+
+    @Test
+    void logsTheTokenUsageReportedByTheService(CapturedOutput output) {
+        server.expect(requestTo(BASE_URL + "/chat/completions"))
+                .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));
+        rewriter.rewrite(TEMPLATE);
+        assertThat(output.getAll())
+                .contains("LLM token usage: model=openai/gpt-oss-20b prompt=7 completion=3 total=10");
+    }
+
+    @Test
+    void asksForTheFormalFormOfAddressInSpanish() {
+        server.expect(requestTo(BASE_URL + "/chat/completions"))
+                .andExpect(jsonPath("$.messages[0].content", containsString("formal \"usted\"")))
+                .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));
+        assertThat(rewriter.rewrite(TEMPLATE, Language.ES)).isPresent();
         server.verify();
     }
 
