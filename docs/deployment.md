@@ -16,7 +16,12 @@ COORDINATOR_PASSWORD=<long random value>
 GP1_PASSWORD=<long random value>
 GP2_PASSWORD=<long random value>
 GROQ_API_KEY=<optional, only if the LLM rewriter is turned on>
+SCREENING_LLM_ENABLED=false
 ```
+
+`SCREENING_LLM_ENABLED` is the switch (default `false`). With a key set and the switch off, the application uses only
+the fixed templates. Set it to `true` and recreate the `app` service to turn the rewriter on, for example for a demo
+recording; every call then logs its token usage.
 
 The guest account (`guest` / `guest-demo`) stays public and read only. The staff passwords above replace the demo
 ones from `application.yml`, so the values published in the repository do not work on the public server.

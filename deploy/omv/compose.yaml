@@ -44,6 +44,7 @@ services:
       GP1_PASSWORD: ${GP1_PASSWORD:?set GP1_PASSWORD}
       GP2_PASSWORD: ${GP2_PASSWORD:?set GP2_PASSWORD}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
+      SCREENING_LLM_ENABLED: ${SCREENING_LLM_ENABLED:-false}
     ports:
       - "${APP_PORT:-8096}:8082"
     logging:
