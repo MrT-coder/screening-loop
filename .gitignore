@@ -35,3 +35,7 @@ Thumbs.db
 
 # QA gate artifacts (ephemeral)
 .qa/
+
+# Local deploy artifacts
+SHA256SUMS
+hapi-demo-data.sql.gz

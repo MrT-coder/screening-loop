@@ -18,7 +18,7 @@ distribute a terminology. We drop `Claim` and `ExplanationOfBenefit` resources w
 
 | Code system | Use | Notice |
 |-------------|-----|--------|
-| LOINC | FIT laboratory code 57905-2 | LOINC is copyright Regenstrief Institute, Inc. and the LOINC Committee and is available at no cost under the licence at http://loinc.org/license. The exact current wording must be copied from loinc.org/license before submission (**to verify**; the site blocked automated access when we tried). |
+| LOINC | FIT laboratory code 57905-2 | Required notice, copied verbatim from loinc.org/license (page last updated 2026-08-06, checked 2026-11-16): see the LOINC notice below. |
 | SNOMED CT, RxNorm | Present only inside Synthea data | Not used for our own content |
 | Own code systems | `case-stage`, `task-type`, `output-type`, `closure-reason` | Placeholder URLs under `https://example.org/screening-loop/CodeSystem/` |
 
@@ -26,9 +26,9 @@ distribute a terminology. We drop `Claim` and `ExplanationOfBenefit` resources w
 
 | Component | Use | Licence | Status |
 |-----------|-----|---------|--------|
-| HAPI FHIR 8.12.1 (client, R4 structures) and the HAPI JPA server image `hapiproject/hapi:v8.12.0-2` | FHIR client and server | Apache-2.0 | to verify against the release |
+| HAPI FHIR 8.12.1 (client, R4 structures) and the HAPI JPA server image `hapiproject/hapi:v8.12.0-2` | FHIR client and server | Apache-2.0 | verified 2026-11-16 for the jpaserver-starter repository LICENSE; the client libraries are in the Maven licence list |
 | Spring Boot 3.5.15, Spring Security, Spring Web | Backend | Apache-2.0 | to verify against the release |
-| PostgreSQL 17 | HAPI database | PostgreSQL Licence | to verify |
+| PostgreSQL 17 | HAPI database | PostgreSQL Licence | verified 2026-11-16 (postgresql.org/about/licence) |
 | Jackson, Logback, SLF4J, JUnit 5, Mockito, AssertJ | Runtime and tests | Apache-2.0 / EPL / MIT / LGPL families | to verify (generate the full list with a Maven licence report) |
 | Checkstyle | Build-time code style gate only, not shipped | LGPL | to verify |
 | Docker, Docker Compose | Local environment | Apache-2.0 (Compose) | to verify |
@@ -57,10 +57,19 @@ Checkstyle build plugin and the licence of the optional Groq model.
 
 | Service | Use | Notes |
 |---------|-----|-------|
-| Groq API (`https://api.groq.com/openai/v1`) | Optional rewriting of reply templates. **Off by default** | Receives only templates with opaque placeholders, never patient data. Subject to Groq's terms. Model `openai/gpt-oss-20b` (replaces `llama-3.1-8b-instant`, which Groq shut down on 2026-08-16; model licence to verify). Not used unless an API key is configured and the switch is turned on |
+| Groq API (`https://api.groq.com/openai/v1`) | Optional rewriting of reply templates. **Off by default** | Receives only templates with opaque placeholders, never patient data. Subject to Groq's terms. Model `openai/gpt-oss-20b` (replaces `llama-3.1-8b-instant`, which Groq shut down on 2026-08-16; model licence Apache-2.0, verified on 2026-11-16 from the Hugging Face model card). Not used unless an API key is configured and the switch is turned on |
 | Google Stitch | Used once to draft the dashboard layout and palette | AI-generated design reference; we re-implemented the page by hand and removed content it invented |
-| Cloudflare Tunnel | Planned public URL for the demo | Not set up yet |
+| Cloudflare Tunnel | Public URL for the demo (https://screening-loop.jbmllnube.com) | In use |
 
 ## Notices
 
-This project makes no clinical claim. LOINC is a registered trademark of Regenstrief Institute, Inc.
+This project makes no clinical claim.
+
+### LOINC notice
+
+This material contains content from LOINC (http://loinc.org). LOINC is copyright © Regenstrief Institute, Inc. and the
+Logical Observation Identifiers Names and Codes (LOINC) Committee and is available at no cost under the license at
+http://loinc.org/license. LOINC® is a registered United States trademark of Regenstrief Institute, Inc.
+
+The licence also asks that extracted LOINC information stays associated with its code and a LOINC display name. We
+keep code 57905-2 together with its display text and do not modify any LOINC field.
