@@ -541,3 +541,8 @@ td.case-id {
   background: var(--primary);
   color: var(--on-primary);
 }
+
+.loinc-notice {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+}
